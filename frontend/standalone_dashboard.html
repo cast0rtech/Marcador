@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BMS Industrial Monitoring Dashboard (SPA)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bms: {
+              bg: '#0b0f19',
+              card: '#111827',
+              border: '#1f293d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- React 18 & ReactDOM & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Chart.js for Standalone (via CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    body {
+      background-color: #0b0f19;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+    const API_BASE = window.location.origin.includes('5173') || window.location.origin.includes('3000') 
+      ? 'http://localhost:8000' 
+      : '';
+
+    function formatDate(dateString) {
+      if (!dateString) return null;
+      try {
+        return new Date(dateString).toLocaleString('es-ES', {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+      } catch {
+        return dateString;
+      }
+    }
+
+    function StandaloneChart({ data }) {
+      const canvasRef = useRef(null);
+      const chartInstance = useRef(null);
+
+      useEffect(() => {
+        if (!canvasRef.current) return;
+        if (chartInstance.current) {
+          chartInstance.current.destroy();
+        }
+
+        const labels = (data || []).map(d => d.category);
+        const counts = (data || []).map(d => d.count);
+
+        const ctx = canvasRef.current.getContext('2d');
+        chartInstance.current = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels.length ? labels : ['Sin datos'],
+            datasets: [{
+              label: 'Alarmas en 24h',
+              data: counts.length ? counts : [0],
+              backgroundColor: ['#ef4444', '#06b6d4', '#818cf8', '#f59e0b', '#3b82f6'],
+              borderRadius: 6,
+              borderWidth: 0,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#111827',
+                titleColor: '#f1f5f9',
+                bodyColor: '#38bdf8',
+                borderColor: '#334155',
+                borderWidth: 1,
+                padding: 10,
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: '#94a3b8', font: { family: 'monospace', size: 11 } }
+              },
+              y: {
+                beginAtZero: true,
+                grid: { color: '#1f293d' },
+                ticks: { color: '#94a3b8', stepSize: 1, font: { family: 'monospace', size: 11 } }
+              }
+            }
+          }
+        });
+
+        return () => {
+          if (chartInstance.current) chartInstance.current.destroy();
+        };
+      }, [data]);
+
+      return (
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-semibold text-white">Alarmas Disparadas (Últimas 24 Horas)</h2>
+              <p className="text-xs text-slate-400">Distribución de eventos por categoría y subsistema</p>
+            </div>
+            <div className="text-xs font-mono bg-slate-950 px-3 py-1.5 rounded border border-slate-800 text-slate-300">
+              Total 24h: <strong className="text-white">{(data || []).reduce((a, b) => a + b.count, 0)}</strong>
+            </div>
+          </div>
+          <div className="h-60 w-full relative">
+            <canvas ref={canvasRef}></canvas>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [summary, setSummary] = useState(null);
+      const [events, setEvents] = useState([]);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [statusFilter, setStatusFilter] = useState('ALL');
+      const [lastUpdated, setLastUpdated] = useState(new Date());
+      const [autoRefresh, setAutoRefresh] = useState(true);
+      const [uploading, setUploading] = useState(false);
+      const [uploadMsg, setUploadMsg] = useState(null);
+      const fileInputRef = useRef(null);
+
+      const loadData = useCallback(async () => {
+        try {
+          const [sumRes, evRes] = await Promise.all([
+            fetch(`${API_BASE}/dashboard/summary`),
+            fetch(`${API_BASE}/alarm-events/?limit=100`)
+          ]);
+          if (sumRes.ok && evRes.ok) {
+            setSummary(await sumRes.json());
+            setEvents(await evRes.json());
+            setLastUpdated(new Date());
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }, []);
+
+      useEffect(() => {
+        loadData();
+
+        // Conexión WebSocket para recibir eventos en tiempo real
+        const isDev = window.location.port === '3000' || window.location.port === '5173';
+        const wsHost = isDev ? 'localhost:8000' : window.location.host;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/alarms`);
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log("⚡ [WS Alerta en tiempo real]", data);
+            // Refrescar al recibir alerta instantánea
+            loadData();
+          } catch(e) {}
+        };
+
+        return () => ws.close();
+      }, [loadData]);
+
+      useEffect(() => {
+        if (!autoRefresh) return;
+        const interval = setInterval(loadData, 5000);
+        return () => clearInterval(interval);
+      }, [autoRefresh, loadData]);
+
+      const handleFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        setUploading(true);
+        setUploadMsg(null);
+
+        try {
+          const res = await fetch(`${API_BASE}/api/points/import`, {
+            method: 'POST',
+            body: formData,
+          });
+          const result = await res.json();
+          if (res.ok) {
+            setUploadMsg({ type: 'success', text: result.message || 'Puntos importados correctamente.' });
+            loadData();
+          } else {
+            setUploadMsg({ type: 'error', text: result.detail || 'Error al importar archivo.' });
+          }
+        } catch (err) {
+          setUploadMsg({ type: 'error', text: 'Error de conexión con el backend.' });
+        } finally {
+          setUploading(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+      };
+
+      const handleExport = () => {
+        window.open(`${API_BASE}/api/points/export`, '_blank');
+      };
+
+      const filteredEvents = events.filter(ev => {
+        const dp = ev.data_point || ev.datapoint;
+        const dpName = dp?.name || `DataPoint #${ev.data_point_id || ev.datapoint_id}`;
+        const groupName = dp?.group?.name || dp?.alarm_group?.name || '';
+        const notif = ev.notifications?.[0] || ev.notification_logs?.[0];
+        const recipient = notif?.recipient || '';
+
+        const matches = dpName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        groupName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        recipient.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!matches) return false;
+
+        const evStatus = ev.status || ev.state;
+        if (statusFilter === 'ALL') return true;
+        if (statusFilter === 'ACTIVE') return evStatus !== 'Resuelta';
+        if (statusFilter === 'RESOLVED') return evStatus === 'Resuelta';
+        return true;
+      });
+
+      const totalActive = summary?.total_active_alarms || 0;
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          {/* Header */}
+          <header className="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-20 px-6 py-4">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-blue-500 animate-ping"></div>
+                <h1 className="text-xl font-bold tracking-tight text-white font-mono">BMS Industrial Supervisor</h1>
+                <span className="text-xs px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800 font-mono">SCADA CORE</span>
+              </div>
+              <div className="flex items-center gap-3">
+                {totalActive > 0 ? (
+                  <span className="px-3 py-1 rounded bg-red-950 border border-red-800 text-red-300 text-xs font-bold animate-pulse">
+                    🚨 {totalActive} ALARMAS ACTIVAS
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 rounded bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs font-semibold">
+                    ✓ SISTEMA NOMINAL (OK)
+                  </span>
+                )}
+                <button
+                  onClick={() => setAutoRefresh(!autoRefresh)}
+                  className={`text-xs font-mono px-3 py-1 rounded border ${
+                    autoRefresh ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-800 text-slate-400 border-slate-700'
+                  }`}
+                >
+                  {autoRefresh ? 'LIVE (5s)' : 'PAUSADO'}
+                </button>
+                <button
+                  onClick={loadData}
+                  className="text-xs px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-slate-200"
+                >
+                  ↻ Actualizar
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-7xl w-full mx-auto p-6 space-y-6 flex-1">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <span className="text-xs font-mono text-slate-400 uppercase">Grupos de Alarma</span>
+                <p className="text-2xl font-bold font-mono text-white mt-1">{summary?.total_groups ?? 0}</p>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <span className="text-xs font-mono text-slate-400 uppercase">Puntos Monitoreados</span>
+                <p className="text-2xl font-bold font-mono text-white mt-1">{summary?.total_points ?? 0}</p>
+              </div>
+              <div className={`p-4 rounded-xl border ${totalActive > 0 ? 'bg-red-950/40 border-red-800' : 'bg-slate-900 border-slate-800'}`}>
+                <span className="text-xs font-mono text-slate-400 uppercase">Alarmas Activas</span>
+                <p className={`text-2xl font-bold font-mono mt-1 ${totalActive > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {totalActive}
+                </p>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <span className="text-xs font-mono text-slate-400 uppercase">Último Polling</span>
+                <p className="text-xs font-mono text-blue-400 mt-2">{lastUpdated.toLocaleTimeString()}</p>
+              </div>
+            </div>
+
+            {/* SECCIÓN INTERACTIVA: Importación y Exportación de Puntos */}
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    📁 Gestión de Puntos (CSV / Excel)
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Sube un archivo de configuración para actualizar puntos Modbus/BACnet o descarga la configuración actual.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept=".csv,.xlsx,.xls"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    <span>{uploading ? 'Cargando...' : '⬆ Importar CSV / Excel'}</span>
+                  </button>
+                  <button
+                    onClick={handleExport}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 transition-all flex items-center gap-2"
+                  >
+                    <span>⬇ Exportar Puntos CSV</span>
+                  </button>
+                </div>
+              </div>
+
+              {uploadMsg && (
+                <div className={`mt-3 p-3 rounded-lg text-xs font-mono flex items-center justify-between ${
+                  uploadMsg.type === 'success' ? 'bg-emerald-950 border border-emerald-800 text-emerald-300' : 'bg-red-950 border border-red-800 text-red-300'
+                }`}>
+                  <span>{uploadMsg.text}</span>
+                  <button onClick={() => setUploadMsg(null)} className="text-slate-400 hover:text-white">✕</button>
+                </div>
+              )}
+            </div>
+
+            {/* Alarm Groups Status Cards */}
+            <div>
+              <h2 className="text-base font-bold text-white mb-3">Estado de Grupos de Alarma</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {(summary?.groups || []).map(g => {
+                  const isAlarm = g.active_alarms > 0;
+                  return (
+                    <div
+                      key={g.id}
+                      className={`p-5 rounded-xl border ${
+                        isAlarm ? 'bg-red-950/40 border-red-700 shadow-lg' : 'bg-slate-900 border-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-bold text-white">{g.name}</h3>
+                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${
+                          isAlarm ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        }`}>
+                          {isAlarm ? 'ALARMA ACTIVA' : 'OK'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-slate-950 p-2.5 rounded border border-slate-800">
+                        <div>
+                          <span className="text-slate-400 block">Puntos:</span>
+                          <strong className="text-white text-base">{g.total_points}</strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Alarmas:</span>
+                          <strong className={`text-base ${isAlarm ? 'text-red-400' : 'text-slate-400'}`}>{g.active_alarms}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Chart Section */}
+            <StandaloneChart data={summary?.alarms_last_24h || []} />
+
+            {/* Audit DataGrid Table */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <h2 className="text-base font-semibold text-white">Auditoría Histórica de AlarmEvent</h2>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Filtrar eventos..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="bg-slate-950 border border-slate-700 text-xs text-white px-3 py-1.5 rounded focus:outline-none focus:border-blue-500"
+                  />
+                  <div className="flex bg-slate-950 border border-slate-700 p-0.5 rounded text-xs">
+                    <button onClick={() => setStatusFilter('ALL')} className={`px-2 py-0.5 rounded ${statusFilter === 'ALL' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>Todos</button>
+                    <button onClick={() => setStatusFilter('ACTIVE')} className={`px-2 py-0.5 rounded ${statusFilter === 'ACTIVE' ? 'bg-red-600 text-white' : 'text-slate-400'}`}>Activas</button>
+                    <button onClick={() => setStatusFilter('RESOLVED')} className={`px-2 py-0.5 rounded ${statusFilter === 'RESOLVED' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Resueltas</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-slate-950 text-slate-400 font-mono uppercase text-[11px] border-b border-slate-800">
+                    <tr>
+                      <th className="p-3">Punto Afectado</th>
+                      <th className="p-3">Categoría</th>
+                      <th className="p-3">Hora Inicio</th>
+                      <th className="p-3">Notificado por Email</th>
+                      <th className="p-3">Hora Resolución</th>
+                      <th className="p-3 text-center">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {filteredEvents.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="p-6 text-center text-slate-500 font-mono">
+                          Sin eventos que coincidan con la búsqueda.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredEvents.map(ev => {
+                        const dp = ev.data_point || ev.datapoint;
+                        const notif = ev.notifications?.[0] || ev.notification_logs?.[0];
+                        const isResolved = ev.status === 'Resuelta' || ev.state === 'Resuelta' || ev.resolved_at !== null;
+                        const startTime = ev.created_at || ev.started_at;
+                        const dpAddress = dp?.address || dp?.register_address;
+
+                        return (
+                          <tr key={ev.id} className="hover:bg-slate-800/50">
+                            <td className="p-3">
+                              <strong className="text-slate-200">{dp?.name || `DataPoint #${ev.data_point_id || ev.datapoint_id}`}</strong>
+                              <div className="text-[11px] text-slate-400 font-mono">
+                                {dp?.protocol} • {dp?.ip_address}:{dpAddress}
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-300">
+                                {dp?.group?.name || dp?.alarm_group?.name || 'General'}
+                              </span>
+                            </td>
+                            <td className="p-3 font-mono text-slate-300 whitespace-nowrap">
+                              {formatDate(startTime)}
+                            </td>
+                            <td className="p-3 font-mono">
+                              {notif ? (
+                                <span className={notif.delivery_status === 'delivered' || notif.success ? 'text-emerald-400' : 'text-red-400'}>
+                                  {notif.delivery_status === 'delivered' || notif.success ? '✓' : '✗'} {notif.recipient}
+                                </span>
+                              ) : (
+                                <span className="text-slate-500">Sin notificación</span>
+                              )}
+                            </td>
+                            <td className="p-3 font-mono whitespace-nowrap">
+                              {ev.resolved_at ? (
+                                <span className="text-emerald-300">{formatDate(ev.resolved_at)}</span>
+                              ) : (
+                                <span className="text-amber-400/80 italic">Pendiente</span>
+                              )}
+                            </td>
+                            <td className="p-3 text-center whitespace-nowrap">
+                              {isResolved ? (
+                                <span className="px-2.5 py-1 rounded-full text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                  Resuelta
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 rounded-full text-xs bg-red-500/20 text-red-400 border border-red-500/40 font-bold animate-pulse">
+                                  {ev.status || ev.state || 'Generada'}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

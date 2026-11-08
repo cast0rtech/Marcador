@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: bms_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bms_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bms_password_segura}
+      POSTGRES_DB: ${POSTGRES_DB:-bms_db}
+    ports:
+      - "5432:5432" # Opcional: permite conectar DBeaver o pgAdmin desde tu PC local
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - bms_network
+
+  backend:
+    build: ./backend
+    container_name: bms_fastapi
+    restart: always
+    environment:
+      # FastAPI usará estos datos en database.py
+      - POSTGRES_USER=${POSTGRES_USER:-bms_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bms_password_segura}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-bms_db}
+      # Interfaz BACnet
+      - BACNET_IP=${BACNET_IP:-192.168.1.10/24}
+      # Datos de correo SMTP para alertas
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_USER=${SMTP_USER:-tu_correo@gmail.com}
+      - SMTP_PASS=${SMTP_PASS:-tu_app_password}
+    ports:
+      - "8000:8000"
+      - "47808:47808/udp" # Crítico para que BACnet descubra equipos en la red local
+    # Para descubrimiento BACnet broadcast UDP en la misma subred física de PLCs en Linux/Raspberry Pi:
+    # Puedes descomentar 'network_mode: "host"' y omitir ports/networks en este servicio
+    # network_mode: "host"
+    depends_on:
+      - db
+    networks:
+      - bms_network
+
+  frontend:
+    build: ./frontend
+    container_name: bms_react
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - bms_network
+
+volumes:
+  pgdata:
+    name: bms_postgres_data # Volumen persistente para la BD
+
+networks:
+  bms_network:
+    driver: bridge
