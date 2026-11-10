@@ -103,6 +103,15 @@ export const translations = {
     creatingAccount: "Creating...",
     userCreatedSuccess: "User {username} created successfully.",
     userCreateError: "Error creating user.",
+
+    // Watchdog Banner
+    watchdogBannerTitle: "Critical Link Failure",
+    watchdogBannerDesc: "Lost network connection with {count} field controller(s).",
+    watchdogInaccessibleNodes: "Inaccessible Nodes (IPs):",
+    watchdogFaultDetected: "Fault detected!",
+    watchdogSystemRestored: "System restored.",
+    subsystemStatus: "Subsystem Status",
+    statusNormal: "NORMAL",
   },
   de: {
     appTitle: "BMS Industriesteuerung",
@@ -206,6 +215,15 @@ export const translations = {
     creatingAccount: "Wird erstellt...",
     userCreatedSuccess: "Benutzer {username} erfolgreich erstellt.",
     userCreateError: "Fehler beim Erstellen des Benutzers.",
+
+    // Watchdog Banner
+    watchdogBannerTitle: "Kritischer Verbindungsfehler",
+    watchdogBannerDesc: "Netzwerkverbindung zu {count} Feldsteuerungen verloren.",
+    watchdogInaccessibleNodes: "Nicht erreichbare Knoten (IPs):",
+    watchdogFaultDetected: "Fehler erkannt!",
+    watchdogSystemRestored: "System wiederhergestellt.",
+    subsystemStatus: "Subsystem-Status",
+    statusNormal: "NORMAL",
   },
   es: {
     appTitle: "BMS Industrial Control",
@@ -309,6 +327,15 @@ export const translations = {
     creatingAccount: "Creando...",
     userCreatedSuccess: "Usuario {username} creado correctamente.",
     userCreateError: "Error al crear el usuario.",
+
+    // Watchdog Banner
+    watchdogBannerTitle: "Fallo Crítico de Enlace",
+    watchdogBannerDesc: "Se ha perdido la conexión de red con {count} controlador(es) de campo.",
+    watchdogInaccessibleNodes: "Nodos Inaccesibles (IPs):",
+    watchdogFaultDetected: "¡Fallo detectado!",
+    watchdogSystemRestored: "Sistema restablecido.",
+    subsystemStatus: "Estado de Subsistema",
+    statusNormal: "NORMAL",
   }
 };
 
