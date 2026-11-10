@@ -44,6 +44,7 @@ async def motor_polling_dinamico():
                         "direccion": int(p.address) if (hasattr(p.protocol, 'value') and p.protocol.value == 'modbus') or str(p.protocol) == 'modbus' else p.address,
                         "bacnet_type": p.bacnet_type,
                         "grupo": p.group.name if p.group else "General",
+                        "grupo_nombre": p.group.name if p.group else "General",
                         "tts_message": p.tts_message,
                     }
                     for p in puntos_activos

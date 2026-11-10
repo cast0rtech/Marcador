@@ -4,12 +4,12 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from database import async_session_maker
+from sqlalchemy.future import select
+from sqlalchemy.sql import func
+from database import AsyncSessionLocal, async_session_maker
+from models import AlarmEvent, AlarmStatus, DataPoint
 import models
-from notifications import dispatch_alarm_notification, enviar_email_async
+from notifications import procesar_notificacion, dispatch_alarm_notification
 from ws_manager import manager
 
 logging.basicConfig(level=logging.INFO)
@@ -28,8 +28,7 @@ except ImportError:
     BAC0 = None
     logger.warning("BAC0 no está disponible. Instálalo con: pip install BAC0")
 
-# Inicializar BACnet (lite no carga toda la base de datos de objetos, ideal para lecturas rápidas)
-# Se puede definir la IP local de la interfaz de red del servidor/contenedor vía variable de entorno
+# Inicializar BACnet lite
 BACNET_LOCAL_IP = os.getenv("BACNET_IP", "192.168.1.10/24")
 
 bacnet = None
@@ -46,23 +45,18 @@ if BAC0:
             logger.error(f"Error iniciando BACnet: {e2}")
             bacnet = None
 
-# Diccionario en memoria para rastrear el estado anterior y detectar flancos (0 -> 1)
+# Memoria para lógica física
 estado_anterior: Dict[int, bool] = {}
+eventos_activos: Dict[int, int] = {}
 
-# Callback opcional para difusión de eventos vía WebSocket en tiempo real
-ws_broadcast_callback = None
-
-def set_ws_broadcast_callback(callback):
-    """Permite a FastAPI registrar una función de broadcast por WebSocket."""
-    global ws_broadcast_callback
-    ws_broadcast_callback = callback
+# --- MEMORIA DEL WATCHDOG (Línea de Vida) ---
+MAX_TIMEOUTS = 3  # 3 ciclos fallidos consecutivos (~6 segundos) para declarar caída
+watchdog_fallos: Dict[str, int] = {}  # Contador de fallos consecutivos por IP
+watchdog_alarmas: Dict[str, int] = {}  # ID del evento de BD cuando la IP está caída
 
 
 def parse_bacnet_address(register_str: str) -> Tuple[str, str]:
-    """
-    Normaliza el direccionamiento BACnet extrayendo el tipo de objeto y la instancia.
-    Soporta formatos industriales: 'BI:101', 'binaryInput 1', '101'.
-    """
+    """Normaliza el direccionamiento BACnet extrayendo el tipo de objeto y la instancia."""
     reg = str(register_str).strip()
     prefix_map = {
         "BI:": "binaryInput",
@@ -99,7 +93,6 @@ async def leer_modbus(ip: str, port: int, address: Any) -> Optional[bool]:
     try:
         await client.connect()
         if client.connected:
-            # address-1 o address dependiendo del offset del fabricante (ej. WAGO)
             result = await client.read_discrete_inputs(addr, count=1, slave=1)
             if not result.isError():
                 return bool(result.bits[0])  # Retorna True (1) o False (0)
@@ -116,132 +109,187 @@ def leer_bacnet_sync(ip: str, object_type: str, object_instance: str) -> Optiona
     if not bacnet:
         return None
     try:
-        # Formato de lectura BAC0: 'IP_ADDRESS objectType objectInstance presentValue'
-        # Ejemplo: '192.168.1.50 binaryInput 1 presentValue'
         query = f"{ip} {object_type} {object_instance} presentValue"
         resultado = bacnet.read(query)
-        # BACnet suele devolver 'active'/'inactive' o 1/0
         return True if resultado in ['active', 1, True] else False
     except Exception as e:
         logger.error(f"Error BACnet en {ip}: {e}")
         return None
 
 
-async def db_crear_evento(punto: Dict[str, Any]):
-    """Inserta el AlarmEvent en la base de datos y dispara la notificación por correo."""
-    async with async_session_maker() as session:
-        try:
-            # Evitar alarmas duplicadas si ya existe una activa
-            active_query = select(models.AlarmEvent).where(
-                models.AlarmEvent.data_point_id == punto['id'],
-                models.AlarmEvent.resolved_at.is_(None),
-                models.AlarmEvent.status != models.AlarmStatus.RESOLVED,
+async def disparar_alarma_watchdog(ip: str, punto: dict):
+    """Genera una alarma crítica de pérdida de comunicaciones para todo el PLC."""
+    print(f"[WATCHDOG CRÍTICO] Pérdida de enlace de red con equipo {ip}")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    nuevo_evento_id = None
+
+    try:
+        async with AsyncSessionLocal() as session:
+            nuevo_evento = AlarmEvent(
+                data_point_id=punto['id'],  # Asociamos la caída al primer punto de esta IP
+                status=AlarmStatus.GENERATED
             )
-            existing = await session.scalar(active_query)
-
-            if not existing:
-                new_event = models.AlarmEvent(
-                    data_point_id=punto['id'],
-                    created_at=datetime.now(timezone.utc),
-                    resolved_at=None,
-                    status=models.AlarmStatus.GENERATED,
-                )
-                session.add(new_event)
-                await session.flush()
-
-                # Obtener el DataPoint para disparar la notificación por correo según el grupo
-                dp = await session.get(models.DataPoint, punto['id'])
-                if dp:
-                    try:
-                        await dispatch_alarm_notification(new_event, dp, session)
-                    except Exception as notif_err:
-                        logger.error(f"Error al enviar notificación para punto {punto['id']}: {notif_err}")
-
-                await session.commit()
-        except Exception as e:
-            await session.rollback()
-            logger.error(f"Error creando AlarmEvent para punto {punto['id']}: {e}")
-
-
-async def db_resolver_evento(punto_id: int):
-    """Actualiza los AlarmEvents activos marcándolos como 'Resuelta' con timestamp de resolución."""
-    async with async_session_maker() as session:
-        try:
-            active_query = select(models.AlarmEvent).where(
-                models.AlarmEvent.data_point_id == punto_id,
-                models.AlarmEvent.resolved_at.is_(None),
-                models.AlarmEvent.status != models.AlarmStatus.RESOLVED,
-            )
-            active_events = (await session.scalars(active_query)).all()
-            now_utc = datetime.now(timezone.utc)
-
-            for event in active_events:
-                event.status = models.AlarmStatus.RESOLVED
-                event.resolved_at = now_utc
-
+            session.add(nuevo_evento)
             await session.commit()
-        except Exception as e:
-            await session.rollback()
-            logger.error(f"Error resolviendo AlarmEvent para punto {punto_id}: {e}")
+            await session.refresh(nuevo_evento)
+            nuevo_evento_id = nuevo_evento.id
+            watchdog_alarmas[ip] = nuevo_evento.id
+    except Exception as db_err:
+        logger.error(f"[WATCHDOG] Error guardando alarma en BD para IP {ip}: {db_err}")
+
+    # Emitir al Dashboard por WebSocket
+    await manager.broadcast({
+        "type": "ALARM_TRIGGERED",
+        "group": "SISTEMA - WATCHDOG",
+        "point_name": f"Pérdida de Comunicación IP: {ip}",
+        "timestamp": now_iso
+    })
+
+    # Enviar notificación crítica (Email / SIP con mensaje TTS adaptado)
+    if nuevo_evento_id:
+        mensaje_tts_watchdog = f"Alerta crítica del sistema. Se ha perdido el enlace de comunicación con el autómata en la dirección IP {ip}."
+        asyncio.create_task(
+            procesar_notificacion(
+                nuevo_evento_id,
+                f"Fallo de Red en IP {ip}",
+                "SISTEMA - WATCHDOG",
+                texto_tts=mensaje_tts_watchdog
+            )
+        )
 
 
-async def db_actualizar_estado(punto_id: int, estado: bool):
-    """Función auxiliar para registrar el estado de lectura si se requiere."""
-    pass
+async def resolver_alarma_watchdog(ip: str):
+    """Resuelve la alarma de comunicaciones cuando el PLC vuelve a responder."""
+    print(f"[WATCHDOG OK] Enlace de red restablecido con {ip}")
+    evento_id = watchdog_alarmas.pop(ip, None)
+
+    if evento_id:
+        try:
+            async with AsyncSessionLocal() as session:
+                stmt = select(AlarmEvent).where(AlarmEvent.id == evento_id)
+                result = await session.execute(stmt)
+                evento = result.scalars().first()
+
+                if evento:
+                    evento.status = AlarmStatus.RESOLVED
+                    evento.resolved_at = func.now()
+                    await session.commit()
+        except Exception as db_err:
+            logger.error(f"[WATCHDOG] Error resolviendo evento #{evento_id} en BD: {db_err}")
+
+        await manager.broadcast({
+            "type": "ALARM_RESOLVED",
+            "group": "SISTEMA - WATCHDOG",
+            "point_name": f"Pérdida de Comunicación IP: {ip}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
 
 
 async def procesar_punto(punto: Dict[str, Any]):
-    """Evalúa un punto de datos, realiza la lectura y gestiona el disparo de alarmas."""
+    """
+    Procesa un punto de datos con evaluación de Watchdog por IP para evitar 
+    tormentas de alarmas ante caídas de PLC y detección de flancos físicos.
+    """
     punto_id = punto['id']
+    ip = punto['ip']
     estado_actual = None
-    proto = str(punto.get('protocolo', '')).lower()
 
+    # --- LECTURA FÍSICA ---
+    proto = str(punto.get('protocolo', '')).lower()
     if proto == 'modbus':
-        estado_actual = await leer_modbus(punto['ip'], 502, punto['direccion'])
-    
+        estado_actual = await leer_modbus(ip, 502, punto['direccion'])
     elif proto == 'bacnet':
-        # asyncio.to_thread evita que la llamada síncrona de BAC0 bloquee FastAPI
         estado_actual = await asyncio.to_thread(
-            leer_bacnet_sync, punto['ip'], punto.get('bacnet_type', 'binaryInput'), punto['direccion']
+            leer_bacnet_sync, ip, punto.get('bacnet_type', 'binaryInput'), punto['direccion']
         )
 
+    # --- EVALUACIÓN WATCHDOG (Línea de Transmisión SES) ---
     if estado_actual is None:
-        return  # Fallo de lectura, se ignora en este ciclo o se registra un error de comms
+        # Fallo de lectura
+        fallos = watchdog_fallos.get(ip, 0)
 
-    # Lógica de detección de flancos (Máquina de estados)
+        # Solo incrementamos y disparamos si la IP no está YA declarada como caída
+        if ip not in watchdog_alarmas:
+            watchdog_fallos[ip] = fallos + 1
+            if watchdog_fallos[ip] == MAX_TIMEOUTS:
+                await disparar_alarma_watchdog(ip, punto)
+
+        return  # Abortamos el procesamiento físico porque no hay datos fiables
+
+    else:
+        # Lectura exitosa: Comprobamos si el equipo venía de una caída de red
+        if ip in watchdog_alarmas:
+            await resolver_alarma_watchdog(ip)
+
+        watchdog_fallos[ip] = 0  # Reseteamos contador
+
+    # --- MÁQUINA DE ESTADOS FÍSICA (Flancos) ---
     estado_prev = estado_anterior.get(punto_id, False)
+    grupo_nombre = punto.get('grupo_nombre') or punto.get('grupo', 'General')
+    now_iso = datetime.now(timezone.utc).isoformat()
 
-    if estado_actual == True and estado_prev == False:
-        logger.warning(f"[!] ALARMA DISPARADA: {punto['nombre']}")
-        # Llamada a Base de Datos para INSERTAR el AlarmEvent y notificar
-        await db_crear_evento(punto)
-        
-        grupo_nombre = punto.get('grupo_nombre') or punto.get('grupo', 'General')
-        # Emitir el evento en tiempo real al Frontend vía WebSocket
+    # Flanco de Subida (0 -> 1)
+    if estado_actual is True and estado_prev is False:
+        print(f"[!] ALARMA FÍSICA DISPARADA: {punto['nombre']}")
+
+        nuevo_evento_id = None
+        try:
+            async with AsyncSessionLocal() as session:
+                nuevo_evento = AlarmEvent(data_point_id=punto_id, status=AlarmStatus.GENERATED)
+                session.add(nuevo_evento)
+                await session.commit()
+                await session.refresh(nuevo_evento)
+                eventos_activos[punto_id] = nuevo_evento.id
+                nuevo_evento_id = nuevo_evento.id
+        except Exception as db_err:
+            logger.error(f"Error creando AlarmEvent para punto {punto_id}: {db_err}")
+
         await manager.broadcast({
             "type": "ALARM_TRIGGERED",
             "group": grupo_nombre,
             "point_name": punto['nombre'],
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
-        
-    elif estado_actual == False and estado_prev == True:
-        logger.info(f"[OK] ALARMA RESUELTA: {punto['nombre']}")
-        # Llamada a la BD para ACTUALIZAR el AlarmEvent con el timestamp de cierre
-        await db_resolver_evento(punto_id)
-        
-        grupo_nombre = punto.get('grupo_nombre') or punto.get('grupo', 'General')
-        # Emitir el evento en tiempo real al Frontend vía WebSocket
-        await manager.broadcast({
-            "type": "ALARM_RESOLVED",
-            "group": grupo_nombre,
-            "point_name": punto['nombre'],
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": now_iso
         })
 
-    # Actualizar la memoria y el estado actual en base de datos
+        if nuevo_evento_id:
+            texto_tts = punto.get('tts_message')
+            asyncio.create_task(
+                procesar_notificacion(
+                    nuevo_evento_id,
+                    punto['nombre'],
+                    grupo_nombre,
+                    texto_tts=texto_tts
+                )
+            )
+
+    # Flanco de Bajada (1 -> 0)
+    elif estado_actual is False and estado_prev is True:
+        print(f"[OK] ALARMA FÍSICA RESUELTA: {punto['nombre']}")
+        evento_id = eventos_activos.pop(punto_id, None)
+
+        if evento_id:
+            try:
+                async with AsyncSessionLocal() as session:
+                    stmt = select(AlarmEvent).where(AlarmEvent.id == evento_id)
+                    result = await session.execute(stmt)
+                    evento = result.scalars().first()
+                    if evento:
+                        evento.status = AlarmStatus.RESOLVED
+                        evento.resolved_at = func.now()
+                        await session.commit()
+            except Exception as db_err:
+                logger.error(f"Error resolviendo AlarmEvent #{evento_id}: {db_err}")
+
+            await manager.broadcast({
+                "type": "ALARM_RESOLVED",
+                "group": grupo_nombre,
+                "point_name": punto['nombre'],
+                "timestamp": now_iso
+            })
+
+    # Actualizar la memoria del ciclo
     estado_anterior[punto_id] = estado_actual
-    await db_actualizar_estado(punto_id, estado_actual)
 
 
 async def motor_polling(
@@ -249,11 +297,7 @@ async def motor_polling(
     poll_interval: float = 2.0,
     stop_event: Optional[asyncio.Event] = None
 ):
-    """
-    Bucle infinito que escanea los equipos cíclicamente.
-    Si se proporciona 'lista_puntos', monitorea esa lista fija (ideal para pruebas).
-    Si 'lista_puntos' es None, consulta dinámicamente los DataPoints de la base de datos en cada ciclo.
-    """
+    """Bucle que escanea los equipos cíclicamente si se ejecuta de forma independiente."""
     logger.info("Motor de Polling BMS iniciado.")
     try:
         while stop_event is None or not stop_event.is_set():
@@ -262,18 +306,16 @@ async def motor_polling(
             if lista_puntos is not None:
                 puntos_a_procesar = lista_puntos
             else:
-                # 1. Leer los DataPoints activos directamente de la base de datos
-                async with async_session_maker() as session:
+                async with AsyncSessionLocal() as session:
                     try:
                         result = await session.scalars(
-                            select(models.DataPoint).where(models.DataPoint.is_active.is_(True))
+                            select(DataPoint).where(DataPoint.is_active.is_(True))
                         )
                         datapoints = result.all()
                     except Exception as e:
                         logger.error(f"Error consultando DataPoints en base de datos: {e}")
                         datapoints = []
 
-                # 2. Formatear la lista de puntos para el motor
                 for dp in datapoints:
                     proto = dp.protocol.value if hasattr(dp.protocol, 'value') else str(dp.protocol)
                     b_type = dp.bacnet_type or ("binaryInput" if "bacnet" in proto.lower() else None)
@@ -284,14 +326,15 @@ async def motor_polling(
                         "ip": dp.ip_address,
                         "direccion": dp.address,
                         "bacnet_type": b_type,
+                        "grupo_nombre": dp.group.name if dp.group else "General",
+                        "grupo": dp.group.name if dp.group else "General",
+                        "tts_message": dp.tts_message,
                     })
 
-            # 3. Ejecuta todas las lecturas concurrentemente
             if puntos_a_procesar:
                 tareas = [procesar_punto(punto) for punto in puntos_a_procesar]
                 await asyncio.gather(*tareas)
 
-            # 4. Tiempo de espera entre ciclos (ej. 2 segundos)
             try:
                 await asyncio.sleep(poll_interval)
             except asyncio.CancelledError:
@@ -307,5 +350,5 @@ async def motor_polling(
         logger.info("Motor de Polling BMS detenido.")
 
 
-# Alias de conveniencia para la integración con el ciclo de vida de FastAPI
+# Alias de compatibilidad
 bms_polling_worker = motor_polling

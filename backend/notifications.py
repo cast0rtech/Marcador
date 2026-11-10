@@ -25,12 +25,14 @@ DEFAULT_NOTIFICATION_CHANNEL = os.getenv("DEFAULT_NOTIFICATION_CHANNEL", "email"
 CONTACTOS_POR_GRUPO = {
     "Climatización": "mantenimiento_clima@empresa.com",
     "Incendios": "seguridad@empresa.com",
+    "SISTEMA - WATCHDOG": "seguridad_redes@empresa.com",
     "default": "admin_bms@empresa.com"
 }
 
 TELEFONOS_POR_GRUPO = {
     "Climatización": os.getenv("SIP_PHONE_CLIMA", DEFAULT_SIP_PHONE),
     "Incendios": os.getenv("SIP_PHONE_INCENDIOS", DEFAULT_SIP_PHONE),
+    "SISTEMA - WATCHDOG": os.getenv("SIP_PHONE_WATCHDOG", DEFAULT_SIP_PHONE),
     "default": DEFAULT_SIP_PHONE
 }
 
