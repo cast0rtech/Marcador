@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import async_session_maker
 import models
 from notifications import dispatch_alarm_notification, enviar_email_async
-from websockets import manager
+from ws_manager import manager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("BMS_Engine")

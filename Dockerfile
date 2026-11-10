@@ -7,10 +7,11 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Instalar dependencias de sistema mínimas para PostgreSQL y librerías C
+# Instalar dependencias de sistema mínimas para PostgreSQL, librerías C y ffmpeg para audio VoIP
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
+    ffmpeg \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

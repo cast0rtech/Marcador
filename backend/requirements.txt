@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
-sqlalchemy
+sqlalchemy[asyncio]
+greenlet
 asyncpg
 pymodbus
 BAC0
@@ -9,4 +10,7 @@ openpyxl
 python-multipart
 aiosmtplib
 websockets
-
+pyVoIP
+gTTS
+pydub
+reportlab

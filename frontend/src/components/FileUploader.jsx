@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { UploadCloud, CheckCircle, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
+import { useLanguage } from '../i18n.jsx';
 
 export default function FileUploader({ onUploadSuccess }) {
+  const { t } = useLanguage();
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState('idle'); // idle, uploading, success, error
   const [message, setMessage] = useState('');
@@ -28,11 +30,11 @@ export default function FileUploader({ onUploadSuccess }) {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setStatus('success');
-      setMessage(response.data.message || 'Importación completada con éxito.');
+      setMessage(response.data.message || t('importSuccess'));
       if (onUploadSuccess) onUploadSuccess();
     } catch (error) {
       setStatus('error');
-      setMessage(error.response?.data?.detail || 'Error de conexión al servidor');
+      setMessage(error.response?.data?.detail || t('importError'));
     }
   };
 
@@ -40,7 +42,7 @@ export default function FileUploader({ onUploadSuccess }) {
     <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-md">
       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
         <UploadCloud className="text-blue-400" />
-        Importar Configuración (Excel/CSV)
+        {t('importConfig')}
       </h3>
       
       <div className="flex flex-col gap-4">
@@ -56,8 +58,12 @@ export default function FileUploader({ onUploadSuccess }) {
           disabled={!file || status === 'uploading'}
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 transition-colors"
         >
-          {status === 'uploading' ? 'Subiendo...' : 'Cargar al Sistema'}
+          {status === 'uploading' ? t('uploading') : t('uploadBtn')}
         </button>
+
+        <p className="text-xs text-gray-400 leading-relaxed font-mono">
+          ℹ️ {t('fileInstructions')}
+        </p>
 
         {status === 'success' && (
           <div className="flex items-center gap-2 text-green-400 text-sm mt-2">
@@ -74,4 +80,3 @@ export default function FileUploader({ onUploadSuccess }) {
     </div>
   );
 }
-

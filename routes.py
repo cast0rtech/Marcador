@@ -14,6 +14,7 @@ from database import get_db
 from models import AlarmEvent, DataPoint
 import models
 import schemas
+from pdf_exporter import generar_pdf_auditoria
 
 router = APIRouter(tags=["DataPoints & Dashboard"])
 router_alarms = APIRouter(prefix="/api/alarms", tags=["Alarms"])
@@ -63,6 +64,32 @@ async def get_alarm_history(db: AsyncSession = Depends(get_db)):
     return data
 
 
+@router_alarms.get("/export/pdf")
+@router.get("/api/alarms/export/pdf", include_in_schema=False)
+async def export_alarm_history_pdf(lang: str = Query("es", description="Idioma del reporte: es, en, de"), db: AsyncSession = Depends(get_db)):
+    """Genera y descarga un PDF con el histórico completo de alarmas y notificaciones."""
+    stmt = (
+        select(AlarmEvent)
+        .options(
+            joinedload(AlarmEvent.data_point).joinedload(DataPoint.group),
+            selectinload(AlarmEvent.notifications)
+        )
+        .order_by(AlarmEvent.created_at.desc())
+        .limit(200)
+    )
+    result = await db.execute(stmt)
+    eventos = result.scalars().all()
+    
+    pdf_buffer = generar_pdf_auditoria(eventos, lang=lang)
+    
+    filename = "Auditoria_BMS.pdf" if lang == "es" else "BMS_Audit_Report.pdf" if lang == "en" else "BMS_Auditbericht.pdf"
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
 # =========================================================================
 # 1. Endpoints de Importación y Exportación de Puntos (/api/points)
 # =========================================================================
@@ -84,6 +111,7 @@ async def export_points(db: AsyncSession = Depends(get_db)):
             "Tipo_BACnet": dp.bacnet_type if dp.bacnet_type else "",
             "Grupo": group.name,
             "Activo": dp.is_active,
+            "Texto_TTS": dp.tts_message if dp.tts_message else "",
         })
 
     if not data:
@@ -157,6 +185,14 @@ async def import_points(file: UploadFile = File(...), db: AsyncSession = Depends
         if pd.notna(row.get("Tipo_BACnet")) and str(row.get("Tipo_BACnet")).strip() != "":
             bacnet_type = str(row["Tipo_BACnet"]).strip()
 
+        # Extraer texto TTS personalizado si existe en la columna
+        tts_message = None
+        for col_name in ["Texto_TTS", "Mensaje_TTS", "TTS", "tts_message", "Texto_Voz", "Mensaje_Voz"]:
+            val = row.get(col_name)
+            if pd.notna(val) and str(val).strip() != "":
+                tts_message = str(val).strip()
+                break
+
         nuevo_punto = models.DataPoint(
             name=str(row["Nombre"]).strip(),
             protocol=protocolo,
@@ -165,6 +201,7 @@ async def import_points(file: UploadFile = File(...), db: AsyncSession = Depends
             bacnet_type=bacnet_type,
             group_id=grupo.id,
             is_active=bool(row.get("Activo", True)),
+            tts_message=tts_message,
         )
 
         db.add(nuevo_punto)

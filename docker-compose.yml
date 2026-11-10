@@ -34,11 +34,20 @@ services:
       - SMTP_PORT=${SMTP_PORT:-465}
       - SMTP_USER=${SMTP_USER:-tu_correo@gmail.com}
       - SMTP_PASS=${SMTP_PASS:-tu_app_password}
+      # Centralita SIP / PBX para llamadas de voz VoIP
+      - SIP_SERVER=${SIP_SERVER:-192.168.1.100}
+      - SIP_PORT=${SIP_PORT:-5060}
+      - SIP_USER=${SIP_USER:-101}
+      - SIP_PASS=${SIP_PASS:-password}
+      - SIP_OPERATOR_PHONE=${SIP_OPERATOR_PHONE:-+41791234567}
+      - DEFAULT_NOTIFICATION_CHANNEL=${DEFAULT_NOTIFICATION_CHANNEL:-email}
     ports:
       - "8000:8000"
       - "47808:47808/udp" # Crítico para que BACnet descubra equipos en la red local
-    # Para descubrimiento BACnet broadcast UDP en la misma subred física de PLCs en Linux/Raspberry Pi:
-    # Puedes descomentar 'network_mode: "host"' y omitir ports/networks en este servicio
+      - "5060:5060/udp"   # SIP Señalización UDP
+      - "5060:5060"       # SIP Señalización TCP
+    # Para comunicación SIP RTP sin problemas de NAT y descubrimiento BACnet broadcast UDP:
+    # Puedes descomentar 'network_mode: "host"' (en Linux/Raspberry Pi) y omitir ports/networks
     # network_mode: "host"
     depends_on:
       - db

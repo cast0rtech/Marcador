@@ -7,8 +7,8 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Instalar dependencias del sistema necesarias para compilar algunas librerías
-RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+# Instalar dependencias del sistema necesarias para compilar algunas librerías y ffmpeg para audio VoIP
+RUN apt-get update && apt-get install -y gcc libpq-dev ffmpeg && rm -rf /var/lib/apt/lists/*
 
 # Instalar librerías de Python
 COPY requirements.txt .

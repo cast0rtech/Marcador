@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { ServerCrash, CheckCircle, BellRing } from 'lucide-react';
+import { useLanguage } from '../i18n.jsx';
 
 export default function Dashboard() {
-  // Estado inicial de grupos
+  const { t } = useLanguage();
+
   const [systemGroups, setSystemGroups] = useState([
-    { name: 'Climatización Planta 1', status: 'OK', activeAlarms: 0 },
-    { name: 'Centro de Datos (Rack)', status: 'OK', activeAlarms: 0 },
-    { name: 'Accesos y Seguridad', status: 'OK', activeAlarms: 0 },
+    { name: 'HVAC Plant 1 / Clima', status: 'OK', activeAlarms: 0 },
+    { name: 'Data Center (Server Rack)', status: 'OK', activeAlarms: 0 },
+    { name: 'Access Control & Security', status: 'OK', activeAlarms: 0 },
   ]);
 
   const [lastEvent, setLastEvent] = useState(null);
@@ -42,50 +44,48 @@ export default function Dashboard() {
 
     ws.current = new WebSocket(wsUrl);
 
-    ws.current.onopen = () => console.log("⚡ [BMS] WebSocket Conectado a", wsUrl);
+    ws.current.onopen = () => console.log("⚡ [BMS] WebSocket Connected:", wsUrl);
     
     ws.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log("📡 Evento BMS recibido:", data);
-        
-        setLastEvent(data); // Guardar el último evento para mostrar notificación UI flotante
+        setLastEvent(data);
 
         setSystemGroups((prevGroups) => {
           return prevGroups.map((group) => {
-            // Comparar por nombre exacto o inclusión de subcadena
             const match =
               group.name === data.group ||
               group.name.toLowerCase().includes(String(data.group).toLowerCase()) ||
               String(data.group).toLowerCase().includes(group.name.toLowerCase());
 
             if (match) {
-              if (data.type === "ALARM_TRIGGERED") {
-                return { ...group, status: 'ALARM', activeAlarms: group.activeAlarms + 1 };
-              } else if (data.type === "ALARM_RESOLVED") {
-                const remaining = Math.max(0, group.activeAlarms - 1);
-                return { ...group, activeAlarms: remaining, status: remaining === 0 ? 'OK' : 'ALARM' };
-              }
+              const isAlarm = data.type === 'ALARM_TRIGGERED';
+              return {
+                ...group,
+                status: isAlarm ? 'ALARM' : 'OK',
+                activeAlarms: isAlarm 
+                  ? group.activeAlarms + 1 
+                  : Math.max(0, group.activeAlarms - 1),
+              };
             }
             return group;
           });
         });
       } catch (err) {
-        console.error("Error procesando mensaje WebSocket:", err);
+        console.error("Error procesando WebSocket:", err);
       }
     };
 
-    ws.current.onclose = () => console.log("WebSocket Desconectado");
+    ws.current.onerror = (error) => console.warn("WebSocket status:", error);
 
-    // Limpieza al desmontar el componente
     return () => {
       if (ws.current) ws.current.close();
     };
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Alerta flotante del último evento recibido */}
+    <div className="flex flex-col gap-6">
+      {/* Toast Flotante de Notificación */}
       {lastEvent && (
         <div className={`p-4 rounded border flex items-center gap-3 transition-all duration-300 ${
           lastEvent.type === 'ALARM_TRIGGERED' 
@@ -95,7 +95,7 @@ export default function Dashboard() {
           <BellRing size={20} className="shrink-0" />
           <span>
             <strong>{lastEvent.point_name}</strong> - 
-            {lastEvent.type === 'ALARM_TRIGGERED' ? ' ¡Fallo detectado!' : ' Sistema restablecido.'}
+            {lastEvent.type === 'ALARM_TRIGGERED' ? ` [${t('statusAlarm')}]` : ` [${t('statusOk')}]`}
             <span className="text-xs opacity-75 font-mono ml-2">({lastEvent.group})</span>
           </span>
         </div>
@@ -122,9 +122,9 @@ export default function Dashboard() {
             </div>
             
             <div>
-              <span className="text-sm text-gray-400 uppercase tracking-wider">Estado</span>
+              <span className="text-sm text-gray-400 uppercase tracking-wider">{t('colStatus')}</span>
               <div className={`text-2xl font-black mt-1 ${sys.status === 'OK' ? 'text-green-400' : 'text-red-500'}`}>
-                {sys.status === 'OK' ? 'NORMAL' : `${sys.activeAlarms} ALARMA(S)`}
+                {sys.status === 'OK' ? t('statusOk') : `${sys.activeAlarms} ${t('statusAlarm')}`}
               </div>
             </div>
           </div>

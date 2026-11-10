@@ -54,10 +54,137 @@
       ? 'http://localhost:8000' 
       : '';
 
-    function formatDate(dateString) {
+    const i18n = {
+      en: {
+        title: "BMS Industrial Supervisor",
+        core: "SCADA CORE",
+        activeAlarmsBadge: "ACTIVE ALARMS",
+        nominalBadge: "NOMINAL SYSTEM (OK)",
+        live: "LIVE (5s)",
+        paused: "PAUSED",
+        refresh: "Refresh",
+        kpiGroups: "Alarm Groups",
+        kpiPoints: "Monitored Points",
+        kpiActive: "Active Alarms",
+        kpiPolling: "Last Polling",
+        mgmtTitle: "Point Management (CSV / Excel)",
+        mgmtDesc: "Upload configuration file to map Modbus/BACnet points or export current mapping.",
+        btnImport: "Import CSV / Excel",
+        btnExport: "Export CSV",
+        uploading: "Uploading...",
+        groupsTitle: "Alarm Groups Status",
+        pointsLabel: "Points:",
+        alarmsLabel: "Alarms:",
+        chartTitle: "Alarms in last 24h",
+        auditTitle: "AlarmEvent Historical Audit",
+        searchPlaceholder: "Filter events...",
+        filterAll: "All",
+        filterActive: "Active",
+        filterResolved: "Resolved",
+        thPoint: "Affected Point",
+        thCategory: "Category",
+        thStart: "Start Time",
+        thNotif: "Email Notification",
+        thResolved: "Resolution Time",
+        thStatus: "Status",
+        noEvents: "No events matching search query.",
+        noNotif: "No notification",
+        pending: "Pending",
+        resolved: "Resolved",
+        connError: "Connection error with backend.",
+        importSuccess: "Points imported successfully.",
+        importFail: "Error importing file.",
+        exportPdf: "Export PDF"
+      },
+      de: {
+        title: "BMS Industrie-Leitsystem",
+        core: "SCADA KERN",
+        activeAlarmsBadge: "AKTIVE ALARME",
+        nominalBadge: "NORMALBETRIEB (OK)",
+        live: "LIVE (5s)",
+        paused: "PAUSIERT",
+        refresh: "Aktualisieren",
+        kpiGroups: "Alarmgruppen",
+        kpiPoints: "Überwachte Datenpunkte",
+        kpiActive: "Aktive Alarme",
+        kpiPolling: "Letzter Polling-Zyklus",
+        mgmtTitle: "Datenpunkt-Verwaltung (CSV / Excel)",
+        mgmtDesc: "Konfigurationsdatei hochladen für Modbus/BACnet oder aktuelles Mapping herunterladen.",
+        btnImport: "CSV / Excel importieren",
+        btnExport: "CSV exportieren",
+        uploading: "Wird geladen...",
+        groupsTitle: "Status der Alarmgruppen",
+        pointsLabel: "Punkte:",
+        alarmsLabel: "Alarme:",
+        chartTitle: "Alarme in den letzten 24 Std.",
+        auditTitle: "Historisches Audit (AlarmEvent)",
+        searchPlaceholder: "Ereignisse filtern...",
+        filterAll: "Alle",
+        filterActive: "Aktiv",
+        filterResolved: "Behoben",
+        thPoint: "Betroffener Datenpunkt",
+        thCategory: "Kategorie",
+        thStart: "Startzeitpunkt",
+        thNotif: "E-Mail-Benachrichtigung",
+        thResolved: "Behebungszeit",
+        thStatus: "Status",
+        noEvents: "Keine Ereignisse für diesen Filter.",
+        noNotif: "Keine Benachrichtigung",
+        pending: "Ausstehend",
+        resolved: "Behoben",
+        connError: "Verbindungsfehler zum Backend.",
+        importSuccess: "Datenpunkte erfolgreich importiert.",
+        importFail: "Fehler beim Datei-Import.",
+        exportPdf: "PDF exportieren"
+      },
+      es: {
+        title: "BMS Industrial Supervisor",
+        core: "SCADA CORE",
+        activeAlarmsBadge: "ALARMAS ACTIVAS",
+        nominalBadge: "SISTEMA NOMINAL (OK)",
+        live: "LIVE (5s)",
+        paused: "PAUSADO",
+        refresh: "Actualizar",
+        kpiGroups: "Grupos de Alarma",
+        kpiPoints: "Puntos Monitoreados",
+        kpiActive: "Alarmas Activas",
+        kpiPolling: "Último Polling",
+        mgmtTitle: "Gestión de Puntos (CSV / Excel)",
+        mgmtDesc: "Sube un archivo de configuración para actualizar puntos Modbus/BACnet o descarga la configuración actual.",
+        btnImport: "Importar CSV / Excel",
+        btnExport: "Exportar Puntos CSV",
+        uploading: "Cargando...",
+        groupsTitle: "Estado de Grupos de Alarma",
+        pointsLabel: "Puntos:",
+        alarmsLabel: "Alarmas:",
+        chartTitle: "Alarmas en 24h",
+        auditTitle: "Auditoría Histórica de AlarmEvent",
+        searchPlaceholder: "Filtrar eventos...",
+        filterAll: "Todos",
+        filterActive: "Activas",
+        filterResolved: "Resueltas",
+        thPoint: "Punto Afectado",
+        thCategory: "Categoría",
+        thStart: "Hora Inicio",
+        thNotif: "Notificado por Email",
+        thResolved: "Hora Resolución",
+        thStatus: "Estado",
+        noEvents: "Sin eventos que coincidan con la búsqueda.",
+        noNotif: "Sin notificación",
+        pending: "Pendiente",
+        resolved: "Resuelta",
+        connError: "Error de conexión con el backend.",
+        importSuccess: "Puntos importados correctamente.",
+        importFail: "Error al importar archivo.",
+        exportPdf: "Exportar PDF"
+      }
+    };
+
+    function formatDate(dateString, lang) {
       if (!dateString) return null;
+      const locale = lang === 'de' ? 'de-DE' : lang === 'es' ? 'es-ES' : 'en-US';
       try {
-        return new Date(dateString).toLocaleString('es-ES', {
+        return new Date(dateString).toLocaleString(locale, {
           day: '2-digit', month: '2-digit', year: 'numeric',
           hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
@@ -66,9 +193,10 @@
       }
     }
 
-    function StandaloneChart({ data }) {
+    function StandaloneChart({ data, lang }) {
       const canvasRef = useRef(null);
       const chartInstance = useRef(null);
+      const t = i18n[lang] || i18n.en;
 
       useEffect(() => {
         if (!canvasRef.current) return;
@@ -83,9 +211,9 @@
         chartInstance.current = new Chart(ctx, {
           type: 'bar',
           data: {
-            labels: labels.length ? labels : ['Sin datos'],
+            labels: labels.length ? labels : ['---'],
             datasets: [{
-              label: 'Alarmas en 24h',
+              label: t.chartTitle,
               data: counts.length ? counts : [0],
               backgroundColor: ['#ef4444', '#06b6d4', '#818cf8', '#f59e0b', '#3b82f6'],
               borderRadius: 6,
@@ -98,9 +226,9 @@
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: '#111827',
-                titleColor: '#f1f5f9',
-                bodyColor: '#38bdf8',
+                backgroundColor: '#1e293b',
+                titleColor: '#f8fafc',
+                bodyColor: '#94a3b8',
                 borderColor: '#334155',
                 borderWidth: 1,
                 padding: 10,
@@ -108,13 +236,13 @@
             },
             scales: {
               x: {
-                grid: { display: false },
-                ticks: { color: '#94a3b8', font: { family: 'monospace', size: 11 } }
+                grid: { color: '#1e293b' },
+                ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans' } }
               },
               y: {
                 beginAtZero: true,
-                grid: { color: '#1f293d' },
-                ticks: { color: '#94a3b8', stepSize: 1, font: { family: 'monospace', size: 11 } }
+                grid: { color: '#1e293b' },
+                ticks: { color: '#94a3b8', stepSize: 1, font: { family: 'JetBrains Mono' } }
               }
             }
           }
@@ -123,20 +251,17 @@
         return () => {
           if (chartInstance.current) chartInstance.current.destroy();
         };
-      }, [data]);
+      }, [data, lang]);
 
       return (
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-5">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-base font-semibold text-white">Alarmas Disparadas (Últimas 24 Horas)</h2>
-              <p className="text-xs text-slate-400">Distribución de eventos por categoría y subsistema</p>
-            </div>
-            <div className="text-xs font-mono bg-slate-950 px-3 py-1.5 rounded border border-slate-800 text-slate-300">
-              Total 24h: <strong className="text-white">{(data || []).reduce((a, b) => a + b.count, 0)}</strong>
-            </div>
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              📊 {t.chartTitle}
+            </h2>
+            <span className="text-xs font-mono text-slate-400">Chart.js</span>
           </div>
-          <div className="h-60 w-full relative">
+          <div className="h-56 w-full">
             <canvas ref={canvasRef}></canvas>
           </div>
         </div>
@@ -144,48 +269,71 @@
     }
 
     function App() {
+      const [lang, setLang] = useState(() => localStorage.getItem('bms_lang') || 'en');
       const [summary, setSummary] = useState(null);
       const [events, setEvents] = useState([]);
-      const [searchTerm, setSearchTerm] = useState('');
-      const [statusFilter, setStatusFilter] = useState('ALL');
+      const [loading, setLoading] = useState(true);
       const [lastUpdated, setLastUpdated] = useState(new Date());
       const [autoRefresh, setAutoRefresh] = useState(true);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [statusFilter, setStatusFilter] = useState('ALL');
       const [uploading, setUploading] = useState(false);
       const [uploadMsg, setUploadMsg] = useState(null);
       const fileInputRef = useRef(null);
 
+      const t = i18n[lang] || i18n.en;
+
+      const changeLanguage = (newLang) => {
+        setLang(newLang);
+        localStorage.setItem('bms_lang', newLang);
+      };
+
       const loadData = useCallback(async () => {
         try {
-          const [sumRes, evRes] = await Promise.all([
+          const [resSummary, resEvents] = await Promise.all([
             fetch(`${API_BASE}/dashboard/summary`),
-            fetch(`${API_BASE}/alarm-events/?limit=100`)
+            fetch(`${API_BASE}/api/alarms/history`),
           ]);
-          if (sumRes.ok && evRes.ok) {
-            setSummary(await sumRes.json());
-            setEvents(await evRes.json());
-            setLastUpdated(new Date());
+
+          if (resSummary.ok) {
+            const sumData = await resSummary.json();
+            setSummary(sumData);
           }
-        } catch (e) {
-          console.error(e);
+          if (resEvents.ok) {
+            const evData = await resEvents.json();
+            setEvents(evData);
+          }
+          setLastUpdated(new Date());
+        } catch (err) {
+          console.error("Error cargando telemetría BMS:", err);
+        } finally {
+          setLoading(false);
         }
       }, []);
 
       useEffect(() => {
         loadData();
+      }, [loadData]);
 
-        // Conexión WebSocket para recibir eventos en tiempo real
-        const isDev = window.location.port === '3000' || window.location.port === '5173';
-        const wsHost = isDev ? 'localhost:8000' : window.location.host;
+      // WebSocket Connection
+      useEffect(() => {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/alarms`);
+        const wsHost = window.location.origin.includes('5173') || window.location.origin.includes('3000')
+          ? 'localhost:8000'
+          : window.location.host;
+        
+        const wsUrl = `${wsProtocol}//${wsHost}/ws/alarms`;
+        const ws = new WebSocket(wsUrl);
 
+        ws.onopen = () => console.log('⚡ WebSocket Conectado:', wsUrl);
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log("⚡ [WS Alerta en tiempo real]", data);
-            // Refrescar al recibir alerta instantánea
+            console.log('📡 Evento WS en Standalone:', data);
             loadData();
-          } catch(e) {}
+          } catch (e) {
+            console.error('Error parseando WebSocket payload:', e);
+          }
         };
 
         return () => ws.close();
@@ -214,13 +362,13 @@
           });
           const result = await res.json();
           if (res.ok) {
-            setUploadMsg({ type: 'success', text: result.message || 'Puntos importados correctamente.' });
+            setUploadMsg({ type: 'success', text: result.message || t.importSuccess });
             loadData();
           } else {
-            setUploadMsg({ type: 'error', text: result.detail || 'Error al importar archivo.' });
+            setUploadMsg({ type: 'error', text: result.detail || t.importFail });
           }
         } catch (err) {
-          setUploadMsg({ type: 'error', text: 'Error de conexión con el backend.' });
+          setUploadMsg({ type: 'error', text: t.connError });
         } finally {
           setUploading(false);
           if (fileInputRef.current) fileInputRef.current.value = '';
@@ -245,8 +393,8 @@
 
         const evStatus = ev.status || ev.state;
         if (statusFilter === 'ALL') return true;
-        if (statusFilter === 'ACTIVE') return evStatus !== 'Resuelta';
-        if (statusFilter === 'RESOLVED') return evStatus === 'Resuelta';
+        if (statusFilter === 'ACTIVE') return evStatus !== 'Resuelta' && evStatus !== 'Resolved';
+        if (statusFilter === 'RESOLVED') return evStatus === 'Resuelta' || evStatus === 'Resolved';
         return true;
       });
 
@@ -259,17 +407,39 @@
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-blue-500 animate-ping"></div>
-                <h1 className="text-xl font-bold tracking-tight text-white font-mono">BMS Industrial Supervisor</h1>
-                <span className="text-xs px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800 font-mono">SCADA CORE</span>
+                <h1 className="text-xl font-bold tracking-tight text-white font-mono">{t.title}</h1>
+                <span className="text-xs px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800 font-mono">{t.core}</span>
               </div>
               <div className="flex items-center gap-3">
+                {/* Language Switcher */}
+                <div className="flex items-center bg-slate-800 border border-slate-700 rounded-lg p-0.5 text-xs font-mono">
+                  <button
+                    onClick={() => changeLanguage('en')}
+                    className={`px-2 py-0.5 rounded ${lang === 'en' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => changeLanguage('de')}
+                    className={`px-2 py-0.5 rounded ${lang === 'de' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    DE
+                  </button>
+                  <button
+                    onClick={() => changeLanguage('es')}
+                    className={`px-2 py-0.5 rounded ${lang === 'es' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    ES
+                  </button>
+                </div>
+
                 {totalActive > 0 ? (
                   <span className="px-3 py-1 rounded bg-red-950 border border-red-800 text-red-300 text-xs font-bold animate-pulse">
-                    🚨 {totalActive} ALARMAS ACTIVAS
+                    🚨 {totalActive} {t.activeAlarmsBadge}
                   </span>
                 ) : (
                   <span className="px-3 py-1 rounded bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs font-semibold">
-                    ✓ SISTEMA NOMINAL (OK)
+                    ✓ {t.nominalBadge}
                   </span>
                 )}
                 <button
@@ -278,13 +448,13 @@
                     autoRefresh ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-800 text-slate-400 border-slate-700'
                   }`}
                 >
-                  {autoRefresh ? 'LIVE (5s)' : 'PAUSADO'}
+                  {autoRefresh ? t.live : t.paused}
                 </button>
                 <button
                   onClick={loadData}
                   className="text-xs px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-slate-200"
                 >
-                  ↻ Actualizar
+                  ↻ {t.refresh}
                 </button>
               </div>
             </div>
@@ -294,21 +464,21 @@
             {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-                <span className="text-xs font-mono text-slate-400 uppercase">Grupos de Alarma</span>
+                <span className="text-xs font-mono text-slate-400 uppercase">{t.kpiGroups}</span>
                 <p className="text-2xl font-bold font-mono text-white mt-1">{summary?.total_groups ?? 0}</p>
               </div>
               <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-                <span className="text-xs font-mono text-slate-400 uppercase">Puntos Monitoreados</span>
+                <span className="text-xs font-mono text-slate-400 uppercase">{t.kpiPoints}</span>
                 <p className="text-2xl font-bold font-mono text-white mt-1">{summary?.total_points ?? 0}</p>
               </div>
               <div className={`p-4 rounded-xl border ${totalActive > 0 ? 'bg-red-950/40 border-red-800' : 'bg-slate-900 border-slate-800'}`}>
-                <span className="text-xs font-mono text-slate-400 uppercase">Alarmas Activas</span>
+                <span className="text-xs font-mono text-slate-400 uppercase">{t.kpiActive}</span>
                 <p className={`text-2xl font-bold font-mono mt-1 ${totalActive > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                   {totalActive}
                 </p>
               </div>
               <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-                <span className="text-xs font-mono text-slate-400 uppercase">Último Polling</span>
+                <span className="text-xs font-mono text-slate-400 uppercase">{t.kpiPolling}</span>
                 <p className="text-xs font-mono text-blue-400 mt-2">{lastUpdated.toLocaleTimeString()}</p>
               </div>
             </div>
@@ -318,10 +488,10 @@
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    📁 Gestión de Puntos (CSV / Excel)
+                    📁 {t.mgmtTitle}
                   </h2>
                   <p className="text-xs text-slate-400">
-                    Sube un archivo de configuración para actualizar puntos Modbus/BACnet o descarga la configuración actual.
+                    {t.mgmtDesc}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
@@ -337,13 +507,13 @@
                     disabled={uploading}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-50 flex items-center gap-2"
                   >
-                    <span>{uploading ? 'Cargando...' : '⬆ Importar CSV / Excel'}</span>
+                    <span>{uploading ? t.uploading : `⬆ ${t.btnImport}`}</span>
                   </button>
                   <button
                     onClick={handleExport}
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 transition-all flex items-center gap-2"
                   >
-                    <span>⬇ Exportar Puntos CSV</span>
+                    <span>⬇ {t.btnExport}</span>
                   </button>
                 </div>
               </div>
@@ -360,7 +530,7 @@
 
             {/* Alarm Groups Status Cards */}
             <div>
-              <h2 className="text-base font-bold text-white mb-3">Estado de Grupos de Alarma</h2>
+              <h2 className="text-base font-bold text-white mb-3">{t.groupsTitle}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {(summary?.groups || []).map(g => {
                   const isAlarm = g.active_alarms > 0;
@@ -376,16 +546,16 @@
                         <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${
                           isAlarm ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                         }`}>
-                          {isAlarm ? 'ALARMA ACTIVA' : 'OK'}
+                          {isAlarm ? t.filterActive : 'OK'}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-slate-950 p-2.5 rounded border border-slate-800">
                         <div>
-                          <span className="text-slate-400 block">Puntos:</span>
+                          <span className="text-slate-400 block">{t.pointsLabel}</span>
                           <strong className="text-white text-base">{g.total_points}</strong>
                         </div>
                         <div>
-                          <span className="text-slate-400 block">Alarmas:</span>
+                          <span className="text-slate-400 block">{t.alarmsLabel}</span>
                           <strong className={`text-base ${isAlarm ? 'text-red-400' : 'text-slate-400'}`}>{g.active_alarms}</strong>
                         </div>
                       </div>
@@ -396,25 +566,32 @@
             </div>
 
             {/* Chart Section */}
-            <StandaloneChart data={summary?.alarms_last_24h || []} />
+            <StandaloneChart data={summary?.alarms_last_24h || []} lang={lang} />
 
             {/* Audit DataGrid Table */}
             <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
               <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <h2 className="text-base font-semibold text-white">Auditoría Histórica de AlarmEvent</h2>
+                <h2 className="text-base font-semibold text-white">{t.auditTitle}</h2>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder="Filtrar eventos..."
+                    placeholder={t.searchPlaceholder}
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     className="bg-slate-950 border border-slate-700 text-xs text-white px-3 py-1.5 rounded focus:outline-none focus:border-blue-500"
                   />
                   <div className="flex bg-slate-950 border border-slate-700 p-0.5 rounded text-xs">
-                    <button onClick={() => setStatusFilter('ALL')} className={`px-2 py-0.5 rounded ${statusFilter === 'ALL' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>Todos</button>
-                    <button onClick={() => setStatusFilter('ACTIVE')} className={`px-2 py-0.5 rounded ${statusFilter === 'ACTIVE' ? 'bg-red-600 text-white' : 'text-slate-400'}`}>Activas</button>
-                    <button onClick={() => setStatusFilter('RESOLVED')} className={`px-2 py-0.5 rounded ${statusFilter === 'RESOLVED' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Resueltas</button>
+                    <button onClick={() => setStatusFilter('ALL')} className={`px-2 py-0.5 rounded ${statusFilter === 'ALL' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>{t.filterAll}</button>
+                    <button onClick={() => setStatusFilter('ACTIVE')} className={`px-2 py-0.5 rounded ${statusFilter === 'ACTIVE' ? 'bg-red-600 text-white' : 'text-slate-400'}`}>{t.filterActive}</button>
+                    <button onClick={() => setStatusFilter('RESOLVED')} className={`px-2 py-0.5 rounded ${statusFilter === 'RESOLVED' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>{t.filterResolved}</button>
                   </div>
+                  <button
+                    onClick={() => window.open(`${API_BASE}/api/alarms/export/pdf?lang=${lang}`, '_blank')}
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+                    title={t.exportPdf}
+                  >
+                    <span>⬇ {t.exportPdf}</span>
+                  </button>
                 </div>
               </div>
 
@@ -422,26 +599,26 @@
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-slate-950 text-slate-400 font-mono uppercase text-[11px] border-b border-slate-800">
                     <tr>
-                      <th className="p-3">Punto Afectado</th>
-                      <th className="p-3">Categoría</th>
-                      <th className="p-3">Hora Inicio</th>
-                      <th className="p-3">Notificado por Email</th>
-                      <th className="p-3">Hora Resolución</th>
-                      <th className="p-3 text-center">Estado</th>
+                      <th className="p-3">{t.thPoint}</th>
+                      <th className="p-3">{t.thCategory}</th>
+                      <th className="p-3">{t.thStart}</th>
+                      <th className="p-3">{t.thNotif}</th>
+                      <th className="p-3">{t.thResolved}</th>
+                      <th className="p-3 text-center">{t.thStatus}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
                     {filteredEvents.length === 0 ? (
                       <tr>
                         <td colSpan="6" className="p-6 text-center text-slate-500 font-mono">
-                          Sin eventos que coincidan con la búsqueda.
+                          {t.noEvents}
                         </td>
                       </tr>
                     ) : (
                       filteredEvents.map(ev => {
                         const dp = ev.data_point || ev.datapoint;
                         const notif = ev.notifications?.[0] || ev.notification_logs?.[0];
-                        const isResolved = ev.status === 'Resuelta' || ev.state === 'Resuelta' || ev.resolved_at !== null;
+                        const isResolved = ev.status === 'Resuelta' || ev.state === 'Resuelta' || ev.status === 'Resolved' || ev.resolved_at !== null;
                         const startTime = ev.created_at || ev.started_at;
                         const dpAddress = dp?.address || dp?.register_address;
 
@@ -459,7 +636,7 @@
                               </span>
                             </td>
                             <td className="p-3 font-mono text-slate-300 whitespace-nowrap">
-                              {formatDate(startTime)}
+                              {formatDate(startTime, lang)}
                             </td>
                             <td className="p-3 font-mono">
                               {notif ? (
@@ -467,24 +644,24 @@
                                   {notif.delivery_status === 'delivered' || notif.success ? '✓' : '✗'} {notif.recipient}
                                 </span>
                               ) : (
-                                <span className="text-slate-500">Sin notificación</span>
+                                <span className="text-slate-500">{t.noNotif}</span>
                               )}
                             </td>
                             <td className="p-3 font-mono whitespace-nowrap">
                               {ev.resolved_at ? (
-                                <span className="text-emerald-300">{formatDate(ev.resolved_at)}</span>
+                                <span className="text-emerald-300">{formatDate(ev.resolved_at, lang)}</span>
                               ) : (
-                                <span className="text-amber-400/80 italic">Pendiente</span>
+                                <span className="text-amber-400/80 italic">{t.pending}</span>
                               )}
                             </td>
                             <td className="p-3 text-center whitespace-nowrap">
                               {isResolved ? (
                                 <span className="px-2.5 py-1 rounded-full text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                  Resuelta
+                                  {t.resolved}
                                 </span>
                               ) : (
                                 <span className="px-2.5 py-1 rounded-full text-xs bg-red-500/20 text-red-400 border border-red-500/40 font-bold animate-pulse">
-                                  {ev.status || ev.state || 'Generada'}
+                                  {t.filterActive}
                                 </span>
                               )}
                             </td>

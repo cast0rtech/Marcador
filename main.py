@@ -4,6 +4,7 @@ from typing import List
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlalchemy.future import select
 
 # Importaciones de nuestros módulos
@@ -11,7 +12,7 @@ from database import init_db, AsyncSessionLocal
 from routes import router as points_router, router_alarms
 from polling import procesar_punto
 from models import DataPoint
-from websockets import manager
+from ws_manager import manager
 
 # Variable global para mantener la referencia de la tarea en segundo plano
 motor_task = None
@@ -42,6 +43,7 @@ async def motor_polling_dinamico():
                         "direccion": int(p.address) if (hasattr(p.protocol, 'value') and p.protocol.value == 'modbus') or str(p.protocol) == 'modbus' else p.address,
                         "bacnet_type": p.bacnet_type,
                         "grupo": p.group.name if p.group else "General",
+                        "tts_message": p.tts_message,
                     }
                     for p in puntos_activos
                 ]
@@ -111,6 +113,17 @@ async def root():
         "service": "BMS Core Engine",
         "polling_active": not motor_task.cancelled() if motor_task else False,
     }
+
+
+@app.get("/dashboard")
+async def get_dashboard():
+    """Sirve el dashboard interactivo multilingüe directamente sin Vite."""
+    path = os.path.join(os.path.dirname(__file__), "frontend", "standalone_dashboard.html")
+    if not os.path.exists(path):
+        path = os.path.join(os.path.dirname(__file__), "..", "frontend", "standalone_dashboard.html")
+    if os.path.exists(path):
+        return FileResponse(path)
+    return {"message": "Dashboard file not found"}
 
 
 @app.websocket("/ws/alarms")

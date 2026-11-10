@@ -28,7 +28,8 @@ async def export_points(db: AsyncSession = Depends(get_db)):
             "Direccion": dp.address,
             "Tipo_BACnet": dp.bacnet_type if dp.bacnet_type else "",
             "Grupo": group.name,
-            "Activo": dp.is_active
+            "Activo": dp.is_active,
+            "Texto_TTS": dp.tts_message if dp.tts_message else ""
         })
     
     if not data:
@@ -111,6 +112,14 @@ async def import_points(file: UploadFile = File(...), db: AsyncSession = Depends
         if pd.notna(row.get('Tipo_BACnet')) and str(row.get('Tipo_BACnet')).strip() != "":
             bacnet_type = str(row['Tipo_BACnet']).strip()
 
+        # Extraer texto TTS
+        tts_message = None
+        for col_name in ['Texto_TTS', 'Mensaje_TTS', 'TTS', 'tts_message', 'Texto_Voz']:
+            val = row.get(col_name)
+            if pd.notna(val) and str(val).strip() != "":
+                tts_message = str(val).strip()
+                break
+
         # 4. Crear el DataPoint
         nuevo_punto = DataPoint(
             name=str(row['Nombre']).strip(),
@@ -119,7 +128,8 @@ async def import_points(file: UploadFile = File(...), db: AsyncSession = Depends
             address=str(row['Direccion']).strip(),
             bacnet_type=bacnet_type,
             group_id=grupo.id,
-            is_active=bool(row.get('Activo', True))
+            is_active=bool(row.get('Activo', True)),
+            tts_message=tts_message,
         )
         
         db.add(nuevo_punto)

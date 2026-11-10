@@ -2,8 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { BarChart3, TrendingUp } from 'lucide-react';
+import { useLanguage } from '../i18n.jsx';
 
 export default function AnalyticsDashboard() {
+  const { t } = useLanguage();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,12 +24,10 @@ export default function AnalyticsDashboard() {
     };
     fetchHistory();
 
-    // Refrescar analítica cada 15 segundos
     const interval = setInterval(fetchHistory, 15000);
     return () => clearInterval(interval);
   }, []);
 
-  // Procesamiento de datos: Agrupar alarmas por Grupo (Ej: Clima vs Accesos)
   const dataByGroup = useMemo(() => {
     const counts = {};
     events.forEach(ev => {
@@ -40,19 +40,15 @@ export default function AnalyticsDashboard() {
     })).sort((a, b) => b.Alarmas - a.Alarmas);
   }, [events]);
 
-  // Procesamiento de datos: Agrupar alarmas por Fecha (Tendencia de los últimos días)
   const dataByDate = useMemo(() => {
     const counts = {};
     events.forEach(ev => {
       if (!ev.fecha_inicio) return;
-      // Extraemos solo la fecha (YYYY-MM-DD)
       const dateStr = ev.fecha_inicio.split('T')[0]; 
       counts[dateStr] = (counts[dateStr] || 0) + 1;
     });
     
-    // Convertimos a array y ordenamos cronológicamente
     return Object.keys(counts).sort().map(date => {
-      // Formatear a DD/MM para lectura visual
       const parts = date.split('-');
       const day = parts[2] || parts[0];
       const month = parts[1] || parts[0];
@@ -64,14 +60,13 @@ export default function AnalyticsDashboard() {
     });
   }, [events]);
 
-  // Personalización del Tooltip (ventana emergente al pasar el ratón) para el modo oscuro
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-gray-800 border border-gray-600 p-3 rounded shadow-xl">
           <p className="text-gray-300 font-semibold mb-1">{label}</p>
           <p className="text-blue-400 font-bold">
-            Total: {payload[0].value} {payload[0].value === 1 ? 'alarma' : 'alarmas'}
+            Total: {payload[0].value}
           </p>
         </div>
       );
@@ -79,7 +74,7 @@ export default function AnalyticsDashboard() {
     return null;
   };
 
-  if (loading) return <div className="text-gray-400 p-4">Cargando métricas...</div>;
+  if (loading) return <div className="text-gray-400 p-4">...</div>;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
@@ -88,12 +83,12 @@ export default function AnalyticsDashboard() {
       <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md">
         <div className="flex items-center gap-2 mb-6">
           <BarChart3 className="text-blue-400" />
-          <h3 className="text-lg font-semibold text-white">Incidencias por Subsistema</h3>
+          <h3 className="text-lg font-semibold text-white">{t('alarmsByGroup')}</h3>
         </div>
         <div className="h-64 w-full">
           {dataByGroup.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-500 font-mono">
-              Sin incidencias registradas
+              ---
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -113,12 +108,12 @@ export default function AnalyticsDashboard() {
       <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md">
         <div className="flex items-center gap-2 mb-6">
           <TrendingUp className="text-blue-400" />
-          <h3 className="text-lg font-semibold text-white">Tendencia de Eventos</h3>
+          <h3 className="text-lg font-semibold text-white">{t('alarmsByTrend')}</h3>
         </div>
         <div className="h-64 w-full">
           {dataByDate.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-500 font-mono">
-              Sin eventos cronológicos
+              ---
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -143,4 +138,3 @@ export default function AnalyticsDashboard() {
     </div>
   );
 }
-

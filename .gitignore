@@ -31,3 +31,6 @@ pgdata/
 .idea/
 *.swp
 *.swo
+*~
+*.exe~
+.~lock.*#

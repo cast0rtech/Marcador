@@ -7,8 +7,26 @@ Incluye:
 - **Motor de Telemetría**: Polling asíncrono en segundo plano compatible con **Modbus TCP (`pymodbus`)** y **BACnet/IP (`BAC0`)**.
 - **Gestión de Alarmas y Notificaciones**: Generación y resolución automática de incidencias y envío asíncrono de correos vía SMTP (`aiosmtplib`) con auditoría en `NotificationLog`.
 - **Importación/Exportación Masiva**: Carga y descarga de puntos en **CSV y Excel (`pandas`)**.
-- **Frontend SCADA**: Dashboard SPA en **React**, **Tailwind CSS**, **Recharts** y **Lucide Icons**.
-- **Contenerización On-Premise**: Listo para despliegue local mediante **Docker** y **Docker Compose** con **Nginx** y **PostgreSQL**.
+- **Llamadas de Voz VoIP / SIP**: Despacho automático de avisos telefónicos por voz TTS (`pyVoIP`, `gTTS`, `pydub`, `ffmpeg`) con PBX local.
+- **Frontend SCADA Multilingüe**: Dashboard SPA en **React**, **Tailwind CSS**, **Recharts** con soporte para **Español**, **Inglés** y **Alemán**.
+- **Lanzador Nativo**: Ejecutable autónomo `Lanzador.exe` para gestión del sistema en Windows.
+
+---
+
+## ⚡ Lanzador Rápido para Windows (`Lanzador.exe`)
+
+El proyecto incluye un ejecutable nativo de control de servicios compilado en Go con detección automática de idioma (`ES`, `EN`, `DE`).
+
+Puedes ejecutarlo con doble clic en **`iniciar.bat`** o directamente desde consola:
+```powershell
+.\Lanzador.exe            # Menú interactivo con selector de idioma
+.\Lanzador.exe -docker    # Inicia con Docker Compose y abre el navegador
+.\Lanzador.exe -local     # Inicia en Modo Local (FastAPI + Vite)
+.\Lanzador.exe -status    # Comprueba el estado de puertos y servicios
+.\Lanzador.exe -lang de   # Inicia directamente en alemán
+.\Lanzador.exe -lang en   # Inicia directamente en inglés
+.\Lanzador.exe -stop      # Detiene todos los servicios y libera puertos
+```
 
 ---
 

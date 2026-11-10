@@ -60,6 +60,7 @@ class DataPoint(Base):
     
     group_id = Column(Integer, ForeignKey("alarm_groups.id"), nullable=False)
     is_active = Column(Boolean, default=True)  # Para habilitar/deshabilitar lectura
+    tts_message = Column(String(500), nullable=True)  # Texto personalizado para locución de voz TTS
     
     group = relationship("AlarmGroup", back_populates="data_points", lazy="selectin")
     events = relationship("AlarmEvent", back_populates="data_point", cascade="all, delete-orphan", lazy="selectin")

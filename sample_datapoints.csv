@@ -1,7 +1,7 @@
-Nombre,Protocolo,IP,Direccion,Tipo_BACnet,Grupo,Activo
-Sonda Temperatura Impulsion Chiller 1,modbus,192.168.1.50,40001,,Climatización,True
-Sonda Temperatura Retorno Chiller 1,modbus,192.168.1.50,40002,,Climatización,True
-Detector Humo CPD Sala Servidores,bacnet,192.168.1.60,101,binaryInput,Incendios,True
-Detector Flujo Agua BIEs Planta Baja,bacnet,192.168.1.60,102,binaryInput,Incendios,True
-Torno Acceso Entrada Principal,bacnet,192.168.1.70,201,binaryInput,Accesos,True
-Analizador de Redes Transformador 1,modbus,192.168.1.80,30010,,Electricidad,True
+Nombre,Protocolo,IP,Direccion,Tipo_BACnet,Grupo,Activo,Texto_TTS
+Sonda Temperatura Impulsion Chiller 1,modbus,192.168.1.50,40001,,Climatización,True,"Alerta crítica. Temperatura anormal en impulsión de agua del Chiller uno. Revise el circuito hidráulico."
+Sonda Temperatura Retorno Chiller 1,modbus,192.168.1.50,40002,,Climatización,True,"Atención. Temperatura alta en retorno de Chiller uno. Posible sobrecarga térmica en la planta."
+Detector Humo CPD Sala Servidores,bacnet,192.168.1.60,101,binaryInput,Incendios,True,"Emergencia máxima. Detector de humo activado en centro de procesamiento de datos. Active protocolo de extinción inmediatamente."
+Detector Flujo Agua BIEs Planta Baja,bacnet,192.168.1.60,102,binaryInput,Incendios,True,"Alerta de incendio. Caudal de agua detectado en bocas de incendio de planta baja. Compruebe la zona."
+Torno Acceso Entrada Principal,bacnet,192.168.1.70,201,binaryInput,Accesos,True,"Aviso de seguridad. Forzamiento o bloqueo detectado en torno de acceso principal."
+Analizador de Redes Transformador 1,modbus,192.168.1.80,30010,,Electricidad,True,"Alerta eléctrica. Disparo o anomalía en transformador de potencia número uno."

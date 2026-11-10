@@ -53,6 +53,7 @@ class DataPointBase(BaseModel):
     address: str = Field(..., max_length=50, description="Dirección Modbus o Instancia BACnet")
     group_id: int = Field(..., description="ID del grupo de alarma asociado")
     is_active: bool = Field(True, description="Habilitar/deshabilitar lectura")
+    tts_message: Optional[str] = Field(None, max_length=500, description="Texto personalizado para síntesis de voz TTS")
 
 
 class DataPointCreate(DataPointBase):
@@ -67,6 +68,7 @@ class DataPointUpdate(BaseModel):
     address: Optional[str] = Field(None, max_length=50)
     group_id: Optional[int] = None
     is_active: Optional[bool] = None
+    tts_message: Optional[str] = Field(None, max_length=500)
 
 
 class DataPointRead(DataPointBase):

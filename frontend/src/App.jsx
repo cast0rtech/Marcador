@@ -3,10 +3,12 @@ import Dashboard from './components/Dashboard';
 import FileUploader from './components/FileUploader';
 import AuditTable from './components/AuditTable';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
-import { Activity, Radio } from 'lucide-react';
+import { Activity, Radio, Globe } from 'lucide-react';
+import { LanguageProvider, useLanguage } from './i18n.jsx';
 
-export default function App() {
+function AppContent() {
   const [reloadKey, setReloadKey] = useState(0);
+  const { lang, changeLanguage, t } = useLanguage();
 
   const handleConfigUpdated = () => {
     console.log("Configuración actualizada, recargando estado del sistema...");
@@ -21,13 +23,42 @@ export default function App() {
           <div className="flex items-center gap-3">
             <Activity className="text-blue-500 animate-pulse" size={28} />
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white">BMS Industrial Control</h1>
-              <p className="text-xs text-gray-400 font-mono">SCADA Engine • Modbus TCP & BACnet/IP</p>
+              <h1 className="text-2xl font-bold tracking-tight text-white">{t('appTitle')}</h1>
+              <p className="text-xs text-gray-400 font-mono">{t('appSubtitle')}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-gray-900 border border-gray-800 rounded-lg text-xs font-mono text-gray-300">
-            <Radio size={14} className="text-green-400" />
-            <span>FastAPI Core: Online</span>
+          
+          <div className="flex items-center gap-3">
+            {/* Language Selector */}
+            <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1 text-xs font-mono">
+              <Globe size={14} className="text-blue-400 ml-1.5 mr-0.5" />
+              <button
+                onClick={() => changeLanguage('en')}
+                className={`px-2 py-0.5 rounded transition-colors ${lang === 'en' ? 'bg-blue-600 text-white font-bold' : 'text-gray-400 hover:text-gray-200'}`}
+                title="English"
+              >
+                EN
+              </button>
+              <button
+                onClick={() => changeLanguage('de')}
+                className={`px-2 py-0.5 rounded transition-colors ${lang === 'de' ? 'bg-blue-600 text-white font-bold' : 'text-gray-400 hover:text-gray-200'}`}
+                title="Deutsch"
+              >
+                DE
+              </button>
+              <button
+                onClick={() => changeLanguage('es')}
+                className={`px-2 py-0.5 rounded transition-colors ${lang === 'es' ? 'bg-blue-600 text-white font-bold' : 'text-gray-400 hover:text-gray-200'}`}
+                title="Español"
+              >
+                ES
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 px-3 py-1 bg-gray-900 border border-gray-800 rounded-lg text-xs font-mono text-gray-300">
+              <Radio size={14} className="text-green-400" />
+              <span>{t('fastApiStatus')}</span>
+            </div>
           </div>
         </div>
       </header>
@@ -35,7 +66,7 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6 mt-4">
         <h2 className="text-xl font-semibold mb-6 text-gray-300 flex items-center gap-2">
-          Monitor de Telemetría en Tiempo Real
+          {t('telemetryTitle')}
         </h2>
         
         {/* Tarjetas de estado con WebSocket reactivo */}
@@ -47,17 +78,16 @@ export default function App() {
           
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 flex flex-col justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Información del Sistema</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('systemInfoTitle')}</h3>
               <p className="text-sm text-gray-400 mb-4">
-                El motor Modbus/BACnet está escaneando los equipos en segundo plano mediante un bucle asíncrono dinámico. 
-                Sube un nuevo archivo Excel o CSV para mapear nuevos registros PLC sin necesidad de reiniciar el servidor.
+                {t('systemInfoDesc')}
               </p>
             </div>
 
             <div className="bg-gray-950 p-3 rounded border border-gray-700 text-xs font-mono text-gray-300 space-y-1">
-              <div>• Protocolos soportados: Modbus TCP (Port 502) / BACnet/IP (Port 47808)</div>
-              <div>• Ciclo de telemetría: 2 segundos por ciclo (asyncio.gather)</div>
-              <div>• Conexión frontend: WebSocket nativo (/ws) con latencia &lt; 10ms</div>
+              <div>{t('protoSpecs1')}</div>
+              <div>{t('protoSpecs2')}</div>
+              <div>{t('protoSpecs3')}</div>
             </div>
           </div>
         </div>
@@ -69,5 +99,13 @@ export default function App() {
         <AuditTable />
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
