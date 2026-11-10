@@ -53,3 +53,4 @@ echo ========================================================
 echo  Instalador generado en dist_installer\Marcador_Installer_v1.0.exe
 echo ========================================================
 endlocal
+
