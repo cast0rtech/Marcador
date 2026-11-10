@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 
 # Compatibilidad passlib con bcrypt >= 4.0
@@ -154,6 +155,54 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
         "role": current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role),
         "is_active": current_user.is_active,
     }
+
+
+# Modelo Pydantic para validar el JSON de entrada de creación de usuarios
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: UserRole
+
+
+@router_auth.post("/users", status_code=status.HTTP_201_CREATED)
+async def create_new_user(
+    new_user: UserCreate, 
+    db: AsyncSession = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    """Crea un nuevo usuario. Solo permitido para el rol ROOT."""
+    
+    # Verificación estricta de seguridad
+    user_role_str = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+    if user_role_str != UserRole.ROOT.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operación denegada. Solo el superusuario (root) puede crear cuentas."
+        )
+
+    # Hashear la contraseña antes de guardarla
+    hashed_pwd = get_password_hash(new_user.password)
+    
+    db_user = User(
+        username=new_user.username,
+        hashed_password=hashed_pwd,
+        role=new_user.role,
+        is_active=True
+    )
+    
+    db.add(db_user)
+    
+    try:
+        await db.commit()
+        await db.refresh(db_user)
+        role_val = db_user.role.value if hasattr(db_user.role, "value") else str(db_user.role)
+        return {"id": db_user.id, "username": db_user.username, "role": role_val}
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El nombre de usuario ya existe en el sistema."
+        )
 
 
 async def create_factory_root_user():

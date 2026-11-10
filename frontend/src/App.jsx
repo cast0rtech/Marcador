@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import FileUploader from './components/FileUploader';
 import AuditTable from './components/AuditTable';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
+import UserManagement from './components/UserManagement';
 import Login from './components/Login';
 import { Activity, Radio, Globe, User, LogOut, Shield } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './i18n.jsx';
@@ -182,6 +183,9 @@ function AppContent() {
             </div>
           </div>
         </div>
+
+        {/* Panel de Gestión de Usuarios y Seguridad (Solo visible para ROOT) */}
+        <UserManagement />
 
         {/* Panel de Gráficas y Métricas Analíticas */}
         <AnalyticsDashboard />

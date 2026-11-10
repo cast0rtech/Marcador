@@ -92,6 +92,17 @@ export const translations = {
     userRole: "Role",
     factoryCredentialsNotice: "Factory Default: root / Marcadorroot",
     securityNotice: "Role-Based Access Control (RBAC) with JWT Cryptographic Tokens",
+
+    // User Management (Root Security Panel)
+    userManagementTitle: "Security Panel (Root Access)",
+    newUser: "New User",
+    accessLevel: "Access Level",
+    roleOperator: "Operator (Read-only & ACK)",
+    roleAdmin: "Administrator (Configuration)",
+    createAccount: "Create Account",
+    creatingAccount: "Creating...",
+    userCreatedSuccess: "User {username} created successfully.",
+    userCreateError: "Error creating user.",
   },
   de: {
     appTitle: "BMS Industriesteuerung",
@@ -184,6 +195,17 @@ export const translations = {
     userRole: "Rolle",
     factoryCredentialsNotice: "Standard-Werkseinstellungen: root / Marcadorroot",
     securityNotice: "Rollenbasierte Zugriffskontrolle (RBAC) mit kryptografischen JWT-Tokens",
+
+    // User Management (Root Security Panel)
+    userManagementTitle: "Sicherheitspanel (Root-Zugriff)",
+    newUser: "Neuer Benutzer",
+    accessLevel: "Zugriffsebene",
+    roleOperator: "Bediener (Nur Lesen & ACK)",
+    roleAdmin: "Administrator (Konfiguration)",
+    createAccount: "Konto erstellen",
+    creatingAccount: "Wird erstellt...",
+    userCreatedSuccess: "Benutzer {username} erfolgreich erstellt.",
+    userCreateError: "Fehler beim Erstellen des Benutzers.",
   },
   es: {
     appTitle: "BMS Industrial Control",
@@ -276,6 +298,17 @@ export const translations = {
     userRole: "Rol",
     factoryCredentialsNotice: "Credenciales de Fábrica: root / Marcadorroot",
     securityNotice: "Control de Acceso Basado en Roles (RBAC) con Tokens Criptográficos JWT",
+
+    // User Management (Root Security Panel)
+    userManagementTitle: "Panel de Seguridad (Acceso Root)",
+    newUser: "Nuevo Usuario",
+    accessLevel: "Nivel de Acceso",
+    roleOperator: "Operador (Solo lectura y ACK)",
+    roleAdmin: "Administrador (Configuración)",
+    createAccount: "Crear Cuenta",
+    creatingAccount: "Creando...",
+    userCreatedSuccess: "Usuario {username} creado correctamente.",
+    userCreateError: "Error al crear el usuario.",
   }
 };
 
