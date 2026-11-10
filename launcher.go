@@ -35,6 +35,8 @@ type Lang string
 const (
 	LangEN Lang = "en"
 	LangDE Lang = "de"
+	LangFR Lang = "fr"
+	LangIT Lang = "it"
 	LangES Lang = "es"
 )
 
@@ -208,6 +210,118 @@ var i18n = map[Lang]TextBundle{
 		PressEnter:        "Drücken Sie [Enter], um fortzufahren...",
 		Goodbye:           "Auf Wiedersehen!",
 	},
+	LangFR: {
+		Title:             "BMS INDUSTRIEL - SUPERVISION SCADA",
+		Subtitle:          "LANCEUR DU SYSTÈME & GESTIONNAIRE D'OPÉRATIONS",
+		CurrentStatus:     "--- État Actuel des Services ---",
+		DockerOnline:      "[EN LIGNE / PRÊT]",
+		DockerOffline:     "[ARRÊTÉ / NON DISPONIBLE]",
+		FrontendActive:    "[ACTIF]",
+		FrontendOffline:   "[HORS LIGNE]",
+		BackendActive:     "[ACTIF]",
+		BackendOffline:    "[HORS LIGNE]",
+		DbActive:          "[ACTIF]",
+		DbOffline:         "[HORS LIGNE]",
+		OptionsHeader:     "OPTIONS DISPONIBLES :",
+		OptDocker:         "Démarrer BMS avec Docker Compose (Recommandé / Complet)",
+		OptLocal:          "Démarrer BMS en Mode Local (Python FastAPI + Vite)",
+		OptBrowser:        "Ouvrir le Tableau de Bord dans le Navigateur Web",
+		OptLogs:           "Afficher les Journaux des Conteneurs en direct",
+		OptStop:           "Arrêter tous les services",
+		OptDeps:           "Installer / Mettre à jour les dépendances (Pip & NPM)",
+		OptLang:           "Changer de langue / Change Language",
+		OptExit:           "Quitter",
+		SelectPrompt:      "Sélectionnez une option [0-7] : ",
+		DockerSelected:    "[+] Mode Docker Compose sélectionné.",
+		DockerNotRunning:  "[?] Le moteur Docker ne semble pas être en cours d'exécution.",
+		DockerAskStart:    "Voulez-vous démarrer Docker Desktop maintenant ? (o/n) : ",
+		DockerStarting:    "[*] Démarrage de Docker Desktop en arrière-plan...",
+		DockerWaiting:     "[*] En attente du moteur Docker (jusqu'à 60s)... ",
+		DockerReady:       "Prêt !",
+		DockerTimeout:     "[!] Délai d'attente dépassé pour Docker Engine.",
+		DockerNoInstall:   "[!] Docker Desktop non trouvé dans les emplacements habituels.",
+		StartingCompose:   "[*] Exécution de : docker compose up -d --build",
+		ComposeSuccess:    "[✓] Conteneurs démarrés avec succès.",
+		WaitingStartup:    "[*] Attente de 3 secondes pour le démarrage des services...",
+		StopSelected:      "[*] Arrêt des services...",
+		StoppingDocker:    "[*] Arrêt des conteneurs Docker...",
+		StoppingLocalPid:  "[*] Fermeture du processus PID %d sur le port %d...",
+		ServicesStopped:   "[✓] Tous les services ont été arrêtés.",
+		LocalSelected:     "[+] Mode Local (Backend FastAPI + Frontend Vite) sélectionné.",
+		PyNotFound:        "[!] Python n'est pas disponible dans le PATH.",
+		StartingBackend:   "[*] Lancement du Backend FastAPI (uvicorn main:app --port 8000)...",
+		StartingFrontend:  "[*] Lancement du Frontend React (npm run dev)...",
+		NodeModulesNotice: "[!] node_modules non trouvé dans ./frontend. API accessible sur http://localhost:8000/docs",
+		LocalRunningTip:   "[✓] BMS en cours d'exécution en arrière-plan. Appuyez sur Ctrl+C pour arrêter.",
+		LocalStopped:      "[✓] Backend et Frontend arrêtés.",
+		InstallingDeps:    "[*] Installation/Mise à jour des dépendances...",
+		InstallingPip:     "1. Installation des bibliothèques Python (requirements.txt)...",
+		PipSuccess:        "[✓] Dépendances Python installées.",
+		InstallingNpm:     "2. Installation des dépendances Node.js dans ./frontend...",
+		NpmSuccess:        "[✓] Dépendances NPM installées.",
+		LogsTip:           "[*] Affichage des journaux Docker en direct (Ctrl+C pour quitter)...",
+		NoActiveService:   "[!] Aucun service web actif trouvé sur les ports standard (80, 3000, 5173, 8000).",
+		BrowserOpenMsg:    "[*] Ouverture du navigateur web sur : %s",
+		InvalidOption:     "[!] Sélection non valide. Veuillez réessayer.",
+		PressEnter:        "Appuyez sur [Entrée] pour continuer...",
+		Goodbye:           "Au revoir !",
+	},
+	LangIT: {
+		Title:             "BMS INDUSTRIALE - SUPERVISIONE SCADA",
+		Subtitle:          "AVVIATORE DI SISTEMA & GESTORE OPERATIVO",
+		CurrentStatus:     "--- Stato Attuale dei Servizi ---",
+		DockerOnline:      "[ONLINE / PRONTO]",
+		DockerOffline:     "[ARRESTATO / NON DISPONIBILE]",
+		FrontendActive:    "[ATTIVO]",
+		FrontendOffline:   "[OFFLINE]",
+		BackendActive:     "[ATTIVO]",
+		BackendOffline:    "[OFFLINE]",
+		DbActive:          "[ATTIVO]",
+		DbOffline:         "[OFFLINE]",
+		OptionsHeader:     "OPZIONI DISPONIBILI:",
+		OptDocker:         "Avvia BMS con Docker Compose (Consigliato / Completo)",
+		OptLocal:          "Avvia BMS in Modalità Locale (Python FastAPI + Vite)",
+		OptBrowser:        "Apri la Dashboard nel Browser Web",
+		OptLogs:           "Visualizza i Log dei Container in tempo reale",
+		OptStop:           "Arresta tutti i servizi",
+		OptDeps:           "Installa / Aggiorna dipendenze (Pip & NPM)",
+		OptLang:           "Cambia lingua / Change Language",
+		OptExit:           "Esci",
+		SelectPrompt:      "Seleziona un'opzione [0-7]: ",
+		DockerSelected:    "[+] Modalità Docker Compose selezionata.",
+		DockerNotRunning:  "[?] Il motore Docker non sembra essere in esecuzione.",
+		DockerAskStart:    "Vuoi avviare Docker Desktop adesso? (s/n): ",
+		DockerStarting:    "[*] Avvio di Docker Desktop in background...",
+		DockerWaiting:     "[*] In attesa del motore Docker (fino a 60s)... ",
+		DockerReady:       "Pronto!",
+		DockerTimeout:     "[!] Timeout durante l'attesa di Docker Engine.",
+		DockerNoInstall:   "[!] Docker Desktop non trovato nei percorsi standard.",
+		StartingCompose:   "[*] Esecuzione: docker compose up -d --build",
+		ComposeSuccess:    "[✓] Container avviati con successo.",
+		WaitingStartup:    "[*] Attesa di 3 secondi per l'avvio dei servizi...",
+		StopSelected:      "[*] Arresto dei servizi...",
+		StoppingDocker:    "[*] Arresto dei container Docker...",
+		StoppingLocalPid:  "[*] Chiusura processo PID %d sulla porta %d...",
+		ServicesStopped:   "[✓] Tutti i servizi sono stati arrestati.",
+		LocalSelected:     "[+] Modalità Locale (Backend FastAPI + Frontend Vite) selezionata.",
+		PyNotFound:        "[!] Python non è disponibile nel PATH.",
+		StartingBackend:   "[*] Avvio Backend FastAPI (uvicorn main:app --port 8000)...",
+		StartingFrontend:  "[*] Avvio Frontend React (npm run dev)...",
+		NodeModulesNotice: "[!] node_modules non trovato in ./frontend. API raggiungibile su http://localhost:8000/docs",
+		LocalRunningTip:   "[✓] BMS in esecuzione in background. Premi Ctrl+C per arrestare.",
+		LocalStopped:      "[✓] Backend e Frontend arrestati.",
+		InstallingDeps:    "[*] Installazione/Aggiornamento delle dipendenze...",
+		InstallingPip:     "1. Installazione librerie Python da requirements.txt...",
+		PipSuccess:        "[✓] Requisiti Python installati.",
+		InstallingNpm:     "2. Installazione dipendenze Node.js in ./frontend...",
+		NpmSuccess:        "[✓] Dipendenze NPM installate.",
+		LogsTip:           "[*] Visualizzazione log Docker in tempo reale (Ctrl+C per uscire)...",
+		NoActiveService:   "[!] Nessun servizio web attivo trovato sulle porte standard (80, 3000, 5173, 8000).",
+		BrowserOpenMsg:    "[*] Apertura browser web su: %s",
+		InvalidOption:     "[!] Selezione non valida. Riprova.",
+		PressEnter:        "Premi [Invio] per continuare...",
+		Goodbye:           "Arrivederci!",
+	},
 	LangES: {
 		Title:             "BMS INDUSTRIAL - SUPERVISIÓN SCADA",
 		Subtitle:          "LANZADOR DEL SISTEMA Y GESTOR DE OPERACIONES",
@@ -274,6 +388,12 @@ func detectSystemLanguage() Lang {
 		if strings.HasPrefix(v, "de") {
 			return LangDE
 		}
+		if strings.HasPrefix(v, "fr") {
+			return LangFR
+		}
+		if strings.HasPrefix(v, "it") {
+			return LangIT
+		}
 		if strings.HasPrefix(v, "es") {
 			return LangES
 		}
@@ -290,6 +410,10 @@ func detectSystemLanguage() Lang {
 		switch primaryLang {
 		case 0x07:
 			return LangDE
+		case 0x0c:
+			return LangFR
+		case 0x10:
+			return LangIT
 		case 0x0a:
 			return LangES
 		case 0x09:
@@ -332,7 +456,7 @@ func printBanner() {
 ╔═══════════════════════════════════════════════════════════════════╗
 ║ ` + centerText(t.Title, 65) + ` ║
 ║ ` + centerText(t.Subtitle, 65) + ` ║
-║ ` + centerText(fmt.Sprintf("[ Language: %s | EN / DE / ES ]", strings.ToUpper(string(currentLang))), 65) + ` ║
+║ ` + centerText(fmt.Sprintf("[ Language: %s | EN / DE / FR / IT / ES ]", strings.ToUpper(string(currentLang))), 65) + ` ║
 ╚═══════════════════════════════════════════════════════════════════╝` + ColorReset)
 }
 
@@ -674,11 +798,13 @@ func openDefaultBrowserAction() {
 }
 
 func changeLanguageInteractive(reader *bufio.Reader) {
-	fmt.Println(ColorCyan + "\nSELECT LANGUAGE / SPRACHE WÄHLEN / SELECCIONAR IDIOMA:" + ColorReset)
+	fmt.Println(ColorCyan + "\nSELECT LANGUAGE / SPRACHE WÄHLEN / CHOISIR LA LANGUE / SELEZIONA LINGUA / IDIOMA:" + ColorReset)
 	fmt.Println("  [1] English (EN)")
 	fmt.Println("  [2] Deutsch (DE)")
-	fmt.Println("  [3] Español (ES)")
-	fmt.Print("Choice / Auswahl [1-3]: ")
+	fmt.Println("  [3] Français (FR)")
+	fmt.Println("  [4] Italiano (IT)")
+	fmt.Println("  [5] Español (ES)")
+	fmt.Print("Choice / Auswahl [1-5]: ")
 	ans, _ := reader.ReadString('\n')
 	switch strings.TrimSpace(ans) {
 	case "1", "en", "EN":
@@ -687,7 +813,13 @@ func changeLanguageInteractive(reader *bufio.Reader) {
 	case "2", "de", "DE":
 		currentLang = LangDE
 		fmt.Println(ColorGreen + "[✓] Sprache geändert zu Deutsch." + ColorReset)
-	case "3", "es", "ES":
+	case "3", "fr", "FR":
+		currentLang = LangFR
+		fmt.Println(ColorGreen + "[✓] Langue changée en Français." + ColorReset)
+	case "4", "it", "IT":
+		currentLang = LangIT
+		fmt.Println(ColorGreen + "[✓] Lingua modificata in Italiano." + ColorReset)
+	case "5", "es", "ES":
 		currentLang = LangES
 		fmt.Println(ColorGreen + "[✓] Idioma cambiado a Español." + ColorReset)
 	default:
@@ -702,7 +834,7 @@ func main() {
 	currentLang = detectSystemLanguage()
 
 	// Flags
-	langFlag := flag.String("lang", string(currentLang), "Language: en, de, es")
+	langFlag := flag.String("lang", string(currentLang), "Language: en, de, fr, it, es")
 	dockerFlag := flag.Bool("docker", false, "Start with Docker Compose")
 	localFlag := flag.Bool("local", false, "Start in Local Mode")
 	stopFlag := flag.Bool("stop", false, "Stop all services")
@@ -713,6 +845,10 @@ func main() {
 	switch strings.ToLower(*langFlag) {
 	case "de", "german", "deutsch":
 		currentLang = LangDE
+	case "fr", "french", "francais", "français":
+		currentLang = LangFR
+	case "it", "italian", "italiano":
+		currentLang = LangIT
 	case "es", "spanish", "espanol", "español":
 		currentLang = LangES
 	case "en", "english":

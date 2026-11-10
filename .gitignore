@@ -34,3 +34,4 @@ pgdata/
 *~
 *.exe~
 .~lock.*#
+build_stage/

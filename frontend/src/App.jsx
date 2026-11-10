@@ -129,6 +129,20 @@ function AppContent() {
                 DE
               </button>
               <button
+                onClick={() => changeLanguage('fr')}
+                className={`px-2 py-0.5 rounded transition-colors ${lang === 'fr' ? 'bg-blue-600 text-white font-bold' : 'text-gray-400 hover:text-gray-200'}`}
+                title="Français"
+              >
+                FR
+              </button>
+              <button
+                onClick={() => changeLanguage('it')}
+                className={`px-2 py-0.5 rounded transition-colors ${lang === 'it' ? 'bg-blue-600 text-white font-bold' : 'text-gray-400 hover:text-gray-200'}`}
+                title="Italiano"
+              >
+                IT
+              </button>
+              <button
                 onClick={() => changeLanguage('es')}
                 className={`px-2 py-0.5 rounded transition-colors ${lang === 'es' ? 'bg-blue-600 text-white font-bold' : 'text-gray-400 hover:text-gray-200'}`}
                 title="Español"

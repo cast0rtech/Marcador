@@ -137,6 +137,88 @@
         importFail: "Fehler beim Datei-Import.",
         exportPdf: "PDF exportieren"
       },
+      fr: {
+        title: "Superviseur Industriel BMS",
+        core: "CŒUR SCADA",
+        activeAlarmsBadge: "ALARMES ACTIVES",
+        nominalBadge: "SYSTÈME NOMINAL (OK)",
+        live: "EN DIRECT (5s)",
+        paused: "EN PAUSE",
+        refresh: "Actualiser",
+        kpiGroups: "Groupes d'Alarmes",
+        kpiPoints: "Points Surveillés",
+        kpiActive: "Alarmes Actives",
+        kpiPolling: "Dernier Polling",
+        mgmtTitle: "Gestion des Points (CSV / Excel)",
+        mgmtDesc: "Téléversez le fichier pour mapper les points Modbus/BACnet ou exportez la configuration.",
+        btnImport: "Importer CSV / Excel",
+        btnExport: "Exporter CSV",
+        uploading: "Téléversement...",
+        groupsTitle: "État des Groupes d'Alarmes",
+        pointsLabel: "Points :",
+        alarmsLabel: "Alarmes :",
+        chartTitle: "Alarmes sur 24h",
+        auditTitle: "Audit Historique AlarmEvent",
+        searchPlaceholder: "Filtrer les événements...",
+        filterAll: "Tous",
+        filterActive: "Actives",
+        filterResolved: "Résolues",
+        thPoint: "Point Affecté",
+        thCategory: "Catégorie",
+        thStart: "Heure Début",
+        thNotif: "Notification E-mail",
+        thResolved: "Heure Résolution",
+        thStatus: "État",
+        noEvents: "Aucun événement correspondant aux critères.",
+        noNotif: "Aucune notification",
+        pending: "En attente",
+        resolved: "Résolue",
+        connError: "Erreur de connexion avec le backend.",
+        importSuccess: "Points importés avec succès.",
+        importFail: "Erreur lors de l'importation du fichier.",
+        exportPdf: "Exporter PDF"
+      },
+      it: {
+        title: "Supervisore Industriale BMS",
+        core: "CORE SCADA",
+        activeAlarmsBadge: "ALLARMI ATTIVI",
+        nominalBadge: "SISTEMA NOMINALE (OK)",
+        live: "IN DIRETTA (5s)",
+        paused: "IN PAUSA",
+        refresh: "Aggiorna",
+        kpiGroups: "Gruppi di Allarme",
+        kpiPoints: "Punti Monitorati",
+        kpiActive: "Allarmi Attivi",
+        kpiPolling: "Ultimo Polling",
+        mgmtTitle: "Gestione Punti (CSV / Excel)",
+        mgmtDesc: "Carica il file per mappare i punti Modbus/BACnet o esporta la configurazione attuale.",
+        btnImport: "Importa CSV / Excel",
+        btnExport: "Esporta CSV",
+        uploading: "Caricamento...",
+        groupsTitle: "Stato Gruppi di Allarme",
+        pointsLabel: "Punti:",
+        alarmsLabel: "Allarmi:",
+        chartTitle: "Allarmi nelle 24h",
+        auditTitle: "Audit Storico AlarmEvent",
+        searchPlaceholder: "Filtra eventi...",
+        filterAll: "Tutti",
+        filterActive: "Attivi",
+        filterResolved: "Risolti",
+        thPoint: "Punto Interessato",
+        thCategory: "Categoria",
+        thStart: "Ora Inizio",
+        thNotif: "Notifica E-mail",
+        thResolved: "Ora Risoluzione",
+        thStatus: "Stato",
+        noEvents: "Nessun evento corrispondente ai criteri.",
+        noNotif: "Nessuna notifica",
+        pending: "In attesa",
+        resolved: "Risolto",
+        connError: "Errore di connessione con il backend.",
+        importSuccess: "Punti importati con successo.",
+        importFail: "Errore durante l'importazione del file.",
+        exportPdf: "Esporta PDF"
+      },
       es: {
         title: "BMS Industrial Supervisor",
         core: "SCADA CORE",
@@ -455,6 +537,18 @@
                     className={`px-2 py-0.5 rounded ${lang === 'de' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
                   >
                     DE
+                  </button>
+                  <button
+                    onClick={() => changeLanguage('fr')}
+                    className={`px-2 py-0.5 rounded ${lang === 'fr' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    FR
+                  </button>
+                  <button
+                    onClick={() => changeLanguage('it')}
+                    className={`px-2 py-0.5 rounded ${lang === 'it' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    IT
                   </button>
                   <button
                     onClick={() => changeLanguage('es')}

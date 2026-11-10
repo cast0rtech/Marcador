@@ -75,6 +75,8 @@ export const translations = {
     // Languages
     langEn: "English",
     langDe: "Deutsch",
+    langFr: "Français",
+    langIt: "Italiano",
     langEs: "Español",
 
     // Authentication & RBAC
@@ -187,6 +189,8 @@ export const translations = {
     // Languages
     langEn: "English",
     langDe: "Deutsch",
+    langFr: "Français",
+    langIt: "Italiano",
     langEs: "Español",
 
     // Authentication & RBAC
@@ -224,6 +228,234 @@ export const translations = {
     watchdogSystemRestored: "System wiederhergestellt.",
     subsystemStatus: "Subsystem-Status",
     statusNormal: "NORMAL",
+  },
+  fr: {
+    appTitle: "Contrôle Industriel BMS",
+    appSubtitle: "Moteur SCADA • Modbus TCP & BACnet/IP",
+    fastApiStatus: "Cœur FastAPI : En ligne",
+    telemetryTitle: "Moniteur de Télémétrie en Temps Réel",
+    systemInfoTitle: "Informations Système",
+    systemInfoDesc: "Le moteur Modbus/BACnet analyse les équipements sur le terrain en arrière-plan via une boucle asynchrone dynamique. Téléversez un fichier Excel ou CSV pour cartographier les registres PLC sans redémarrer le serveur.",
+    protoSpecs1: "• Protocoles pris en charge : Modbus TCP (Port 502) / BACnet/IP (Port 47808)",
+    protoSpecs2: "• Cycle de télémétrie : 2 secondes par cycle (asyncio.gather)",
+    protoSpecs3: "• Connexion Frontend : WebSocket natif (/ws) avec latence < 10ms",
+    
+    // FileUploader
+    importConfig: "Importer Configuration (Excel/CSV)",
+    uploading: "Téléversement en cours...",
+    uploadBtn: "Charger dans le Système",
+    fileInstructions: "Prend en charge les fichiers CSV, XLSX ou XLS avec colonnes : Nombre, Protocolo, IP, Direccion, Grupo, Activo, Texto_TTS",
+    importSuccess: "Importation terminée avec succès.",
+    importError: "Erreur de connexion au serveur",
+
+    // Dashboard groups
+    statusOk: "OK",
+    statusAlarm: "ALARME",
+    alarmsActiveCount: "Alarmes Actives",
+    nominalState: "État Nominal",
+    liveNotification: "Notification BMS en Direct",
+    
+    // Analytics & Charts
+    analyticsTitle: "Analytique de Télémétrie & Incidents",
+    analyticsSubtitle: "Tendance des incidents et répartition de charge critique",
+    totalIncidents: "Total des Incidents Enregistrés",
+    alarmsByGroup: "Incidents par Groupe / Zone",
+    alarmsByTrend: "Tendance Temporelle (Derniers Jours)",
+    alarmsLegend: "Alarmes",
+    total24h: "Total 24h",
+    alarmsTriggered24h: "Alarmes déclenchées (24h)",
+    noAlarms24h: "Aucune alarme enregistrée au cours des dernières 24 heures.",
+
+    // Audit Table & Grid
+    auditTitle: "Journal d'Audit & Traçabilité",
+    auditLastEvents: "{count} derniers événements",
+    colTimestamp: "Horodatage / Début",
+    colGroupPoint: "Groupe & Point de Données",
+    colStatus: "État",
+    colNotif: "Notifications (Escalade)",
+    colResolution: "Résolution",
+    statusResolved: "Résolue",
+    statusActive: "Active",
+    noResolution: "En attente / En cours",
+    auditLoading: "Chargement de l'audit...",
+    filterEventsPlaceholder: "Filtrer les événements...",
+    filterAll: "Tous",
+    filterActive: "Actives",
+    filterResolved: "Résolues",
+    affectedPoint: "Point Affecté",
+    category: "Catégorie",
+    startTime: "Heure Début",
+    notifEmail: "Notification par E-mail",
+    resolutionTime: "Heure Résolution",
+    noEventsFound: "Aucun événement correspondant aux critères.",
+    noNotif: "Aucune notification",
+    pending: "En attente",
+    exportPdf: "Exporter PDF",
+
+    // Groups & Cards
+    noAlarmGroups: "Aucun groupe d'alarmes enregistré dans le système.",
+    telemetryMonitoring: "Surveillance de la télémétrie",
+    points: "Points",
+    alarms: "Alarmes",
+    alarm: "Alarme",
+    defaultRouting: "Routage par défaut",
+
+    // Languages
+    langEn: "English",
+    langDe: "Deutsch",
+    langFr: "Français",
+    langIt: "Italiano",
+    langEs: "Español",
+
+    // Authentication & RBAC
+    loginTitle: "Contrôle d'Accès Industriel BMS",
+    loginSubtitle: "Connectez-vous avec vos identifiants autorisés pour accéder au SCADA",
+    username: "Nom d'utilisateur",
+    usernamePlaceholder: "ex. root",
+    password: "Mot de passe",
+    passwordPlaceholder: "Entrez votre mot de passe",
+    loginBtn: "Se Connecter",
+    authenticating: "Authentification...",
+    loginError: "Nom d'utilisateur ou mot de passe incorrect",
+    logout: "Déconnexion",
+    sessionActive: "Session Active",
+    userRole: "Rôle",
+    factoryCredentialsNotice: "Par défaut en usine : root / Marcadorroot",
+    securityNotice: "Contrôle d'accès basé sur les rôles (RBAC) avec jetons JWT",
+
+    // User Management (Root Security Panel)
+    userManagementTitle: "Panneau de Sécurité (Accès Root)",
+    newUser: "Nouvel Utilisateur",
+    accessLevel: "Niveau d'Accès",
+    roleOperator: "Opérateur (Lecture seule & ACK)",
+    roleAdmin: "Administrateur (Configuration)",
+    createAccount: "Créer le Compte",
+    creatingAccount: "Création en cours...",
+    userCreatedSuccess: "Utilisateur {username} créé avec succès.",
+    userCreateError: "Erreur lors de la création de l'utilisateur.",
+
+    // Watchdog Banner
+    watchdogBannerTitle: "Défaut Critique de Liaison",
+    watchdogBannerDesc: "Perte de connexion réseau avec {count} contrôleur(s) de terrain.",
+    watchdogInaccessibleNodes: "Nœuds Inaccessibles (IPs) :",
+    watchdogFaultDetected: "Défaut détecté !",
+    watchdogSystemRestored: "Système rétabli.",
+    subsystemStatus: "État du Sous-système",
+    statusNormal: "NORMAL",
+  },
+  it: {
+    appTitle: "Controllo Industriale BMS",
+    appSubtitle: "Motore SCADA • Modbus TCP & BACnet/IP",
+    fastApiStatus: "Core FastAPI: Online",
+    telemetryTitle: "Monitor Telemetria in Tempo Reale",
+    systemInfoTitle: "Informazioni di Sistema",
+    systemInfoDesc: "Il motore Modbus/BACnet esegue la scansione dei dispositivi sul campo in background tramite un ciclo asincrono dinamico. Carica un file Excel o CSV per mappare i registri PLC senza riavviare il server.",
+    protoSpecs1: "• Protocolli supportati: Modbus TCP (Porta 502) / BACnet/IP (Porta 47808)",
+    protoSpecs2: "• Ciclo di telemetria: 2 secondi per ciclo (asyncio.gather)",
+    protoSpecs3: "• Connessione Frontend: WebSocket nativo (/ws) con latenza < 10ms",
+    
+    // FileUploader
+    importConfig: "Importa Configurazione (Excel/CSV)",
+    uploading: "Caricamento in corso...",
+    uploadBtn: "Carica nel Sistema",
+    fileInstructions: "Supporta file CSV, XLSX o XLS con colonne: Nombre, Protocolo, IP, Direccion, Grupo, Activo, Texto_TTS",
+    importSuccess: "Importazione completata con successo.",
+    importError: "Errore di connessione al server",
+
+    // Dashboard groups
+    statusOk: "OK",
+    statusAlarm: "ALLARME",
+    alarmsActiveCount: "Allarmi Attivi",
+    nominalState: "Stato Nominale",
+    liveNotification: "Notifica BMS in Diretta",
+    
+    // Analytics & Charts
+    analyticsTitle: "Analisi Telemetria & Incidenti",
+    analyticsSubtitle: "Trend incidenti e distribuzione carico critico",
+    totalIncidents: "Totale Incidenti Registrati",
+    alarmsByGroup: "Incidenti per Gruppo / Zona",
+    alarmsByTrend: "Trend Temporale (Ultimi Giorni)",
+    alarmsLegend: "Allarmi",
+    total24h: "Totale 24h",
+    alarmsTriggered24h: "Allarmi attivati (24h)",
+    noAlarms24h: "Nessun allarme registrato nelle ultime 24 ore.",
+
+    // Audit Table & Grid
+    auditTitle: "Registro di Audit & Tracciabilità",
+    auditLastEvents: "Ultimi {count} eventi",
+    colTimestamp: "Timestamp / Inizio",
+    colGroupPoint: "Gruppo & Punto Dati",
+    colStatus: "Stato",
+    colNotif: "Notifiche (Escalation)",
+    colResolution: "Risoluzione",
+    statusResolved: "Risolto",
+    statusActive: "Attivo",
+    noResolution: "In attesa / In corso",
+    auditLoading: "Caricamento audit...",
+    filterEventsPlaceholder: "Filtra eventi...",
+    filterAll: "Tutti",
+    filterActive: "Attivi",
+    filterResolved: "Risolti",
+    affectedPoint: "Punto Interessato",
+    category: "Categoria",
+    startTime: "Ora Inizio",
+    notifEmail: "Notifica via E-mail",
+    resolutionTime: "Ora Risoluzione",
+    noEventsFound: "Nessun evento corrispondente ai criteri.",
+    noNotif: "Nessuna notifica",
+    pending: "In attesa",
+    exportPdf: "Esporta PDF",
+
+    // Groups & Cards
+    noAlarmGroups: "Nessun gruppo di allarmi registrato nel sistema.",
+    telemetryMonitoring: "Monitoraggio telemetria",
+    points: "Punti",
+    alarms: "Allarmi",
+    alarm: "Allarme",
+    defaultRouting: "Routing predefinito",
+
+    // Languages
+    langEn: "English",
+    langDe: "Deutsch",
+    langFr: "Français",
+    langIt: "Italiano",
+    langEs: "Español",
+
+    // Authentication & RBAC
+    loginTitle: "Controllo Accessi Industriale BMS",
+    loginSubtitle: "Accedi con le tue credenziali autorizzate per accedere al controllo SCADA",
+    username: "Nome utente",
+    usernamePlaceholder: "es. root",
+    password: "Password",
+    passwordPlaceholder: "Inserisci la password",
+    loginBtn: "Accedi",
+    authenticating: "Autenticazione in corso...",
+    loginError: "Nome utente o password non validi",
+    logout: "Disconnetti",
+    sessionActive: "Sessione Attiva",
+    userRole: "Ruolo",
+    factoryCredentialsNotice: "Predefinito di fabbrica: root / Marcadorroot",
+    securityNotice: "Controllo degli accessi basato sui ruoli (RBAC) con token JWT",
+
+    // User Management (Root Security Panel)
+    userManagementTitle: "Pannello di Sicurezza (Accesso Root)",
+    newUser: "Nuovo Utente",
+    accessLevel: "Livello di Accesso",
+    roleOperator: "Operatore (Sola lettura & ACK)",
+    roleAdmin: "Amministratore (Configurazione)",
+    createAccount: "Crea Account",
+    creatingAccount: "Creazione in corso...",
+    userCreatedSuccess: "Utente {username} creato con successo.",
+    userCreateError: "Errore durante la creazione dell'utente.",
+
+    // Watchdog Banner
+    watchdogBannerTitle: "Guasto Critico del Collegamento",
+    watchdogBannerDesc: "Connessione di rete persa con {count} controller sul campo.",
+    watchdogInaccessibleNodes: "Nodi Inaccessibili (IP):",
+    watchdogFaultDetected: "Guasto rilevato!",
+    watchdogSystemRestored: "Sistema ripristinato.",
+    subsystemStatus: "Stato Sottosistema",
+    statusNormal: "NORMALE",
   },
   es: {
     appTitle: "BMS Industrial Control",
@@ -299,6 +531,8 @@ export const translations = {
     // Languages
     langEn: "English",
     langDe: "Deutsch",
+    langFr: "Français",
+    langIt: "Italiano",
     langEs: "Español",
 
     // Authentication & RBAC
