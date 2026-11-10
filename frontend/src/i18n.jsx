@@ -76,6 +76,22 @@ export const translations = {
     langEn: "English",
     langDe: "Deutsch",
     langEs: "Español",
+
+    // Authentication & RBAC
+    loginTitle: "BMS Industrial Access Control",
+    loginSubtitle: "Sign in with your authorized credentials to access SCADA control",
+    username: "Username",
+    usernamePlaceholder: "e.g. root",
+    password: "Password",
+    passwordPlaceholder: "Enter your password",
+    loginBtn: "Sign In",
+    authenticating: "Authenticating...",
+    loginError: "Invalid username or password",
+    logout: "Sign Out",
+    sessionActive: "Active Session",
+    userRole: "Role",
+    factoryCredentialsNotice: "Factory Default: root / Marcadorroot",
+    securityNotice: "Role-Based Access Control (RBAC) with JWT Cryptographic Tokens",
   },
   de: {
     appTitle: "BMS Industriesteuerung",
@@ -152,6 +168,22 @@ export const translations = {
     langEn: "English",
     langDe: "Deutsch",
     langEs: "Español",
+
+    // Authentication & RBAC
+    loginTitle: "BMS Industrielle Zugangskontrolle",
+    loginSubtitle: "Melden Sie sich mit Ihren autorisierten Zugangsdaten an",
+    username: "Benutzername",
+    usernamePlaceholder: "z.B. root",
+    password: "Passwort",
+    passwordPlaceholder: "Passwort eingeben",
+    loginBtn: "Anmelden",
+    authenticating: "Wird authentifiziert...",
+    loginError: "Ungültiger Benutzername oder Passwort",
+    logout: "Abmelden",
+    sessionActive: "Aktive Sitzung",
+    userRole: "Rolle",
+    factoryCredentialsNotice: "Standard-Werkseinstellungen: root / Marcadorroot",
+    securityNotice: "Rollenbasierte Zugriffskontrolle (RBAC) mit kryptografischen JWT-Tokens",
   },
   es: {
     appTitle: "BMS Industrial Control",
@@ -228,6 +260,22 @@ export const translations = {
     langEn: "English",
     langDe: "Deutsch",
     langEs: "Español",
+
+    // Authentication & RBAC
+    loginTitle: "Control de Acceso Industrial BMS",
+    loginSubtitle: "Inicie sesión con sus credenciales autorizadas para acceder al control SCADA",
+    username: "Usuario",
+    usernamePlaceholder: "ej. root",
+    password: "Contraseña",
+    passwordPlaceholder: "Ingrese su contraseña",
+    loginBtn: "Iniciar Sesión",
+    authenticating: "Autenticando...",
+    loginError: "Usuario o contraseña incorrectos",
+    logout: "Cerrar Sesión",
+    sessionActive: "Sesión Activa",
+    userRole: "Rol",
+    factoryCredentialsNotice: "Credenciales de Fábrica: root / Marcadorroot",
+    securityNotice: "Control de Acceso Basado en Roles (RBAC) con Tokens Criptográficos JWT",
   }
 };
 

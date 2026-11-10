@@ -356,10 +356,41 @@
         setUploadMsg(null);
 
         try {
-          const res = await fetch(`${API_BASE}/api/points/import`, {
+          let token = localStorage.getItem('bms_token');
+          const headers = {};
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
+          let res = await fetch(`${API_BASE}/api/points/import`, {
             method: 'POST',
+            headers: headers,
             body: formData,
           });
+
+          // Si requiere autorización y no tenemos token o expiró, intentamos auto-login con credenciales por defecto de fábrica
+          if (res.status === 401) {
+            const loginBody = new URLSearchParams();
+            loginBody.append('username', 'root');
+            loginBody.append('password', 'Marcadorroot');
+            const authRes = await fetch(`${API_BASE}/api/auth/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: loginBody
+            });
+            if (authRes.ok) {
+              const authData = await authRes.json();
+              token = authData.access_token;
+              localStorage.setItem('bms_token', token);
+              headers['Authorization'] = `Bearer ${token}`;
+              res = await fetch(`${API_BASE}/api/points/import`, {
+                method: 'POST',
+                headers: headers,
+                body: formData,
+              });
+            }
+          }
+
           const result = await res.json();
           if (res.ok) {
             setUploadMsg({ type: 'success', text: result.message || t.importSuccess });

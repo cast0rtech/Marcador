@@ -28,6 +28,25 @@ class NotificationChannel(str, enum.Enum):
     VOICE = "voice"
 
 
+class UserRole(str, enum.Enum):
+    ROOT = "root"
+    ADMIN = "admin"
+    OPERATOR = "operador"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(Enum(UserRole), default=UserRole.OPERATOR, nullable=False)
+    is_active = Column(Boolean, default=True)
+
+    def __repr__(self) -> str:
+        return f"<User(id={self.id}, username='{self.username}', role='{self.role}')>"
+
+
 # --- TABLAS MAESTRAS (CONFIGURACIÓN) ---
 
 class AlarmGroup(Base):

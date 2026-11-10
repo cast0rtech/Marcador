@@ -10,6 +10,7 @@ from sqlalchemy.future import select
 # Importaciones de nuestros módulos
 from database import init_db, AsyncSessionLocal
 from routes import router as points_router, router_alarms
+from auth import router_auth, create_factory_root_user
 from polling import procesar_punto
 from models import DataPoint
 from ws_manager import manager
@@ -62,9 +63,10 @@ async def motor_polling_dinamico():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Inicializar la base de datos (crear tablas si no existen)
+    # 1. Inicializar la base de datos (crear tablas si no existen) y usuario root
     print("Inicializando Base de Datos...")
     await init_db()
+    await create_factory_root_user()
     
     # 2. Iniciar el motor de polling en segundo plano
     print("Arrancando el Motor de Polling (Modbus/BACnet)...")
@@ -100,7 +102,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Integración de routers (puntos, dashboard y registro de auditoría de alarmas)
+# Integración de routers (autenticación, puntos, dashboard y registro de auditoría de alarmas)
+app.include_router(router_auth)
 app.include_router(points_router)
 app.include_router(router_alarms)
 

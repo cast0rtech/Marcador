@@ -1,25 +1,93 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import Dashboard from './components/Dashboard';
 import FileUploader from './components/FileUploader';
 import AuditTable from './components/AuditTable';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
-import { Activity, Radio, Globe } from 'lucide-react';
+import Login from './components/Login';
+import { Activity, Radio, Globe, User, LogOut, Shield } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './i18n.jsx';
 
 function AppContent() {
   const [reloadKey, setReloadKey] = useState(0);
   const { lang, changeLanguage, t } = useLanguage();
 
+  const [auth, setAuth] = useState(() => {
+    const token = localStorage.getItem('bms_token');
+    const role = localStorage.getItem('bms_role') || '';
+    const username = localStorage.getItem('bms_username') || '';
+    return {
+      token,
+      role,
+      username,
+      isAuthenticated: Boolean(token),
+    };
+  });
+
+  useEffect(() => {
+    // Interceptor para inyectar token Bearer en peticiones salientes de Axios
+    const reqInterceptor = axios.interceptors.request.use((config) => {
+      const token = localStorage.getItem('bms_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
+
+    // Interceptor para detectar expiración de sesión (401)
+    const resInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          console.warn("Token expirado o no autorizado. Redirigiendo a login...");
+          handleLogout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.request.eject(reqInterceptor);
+      axios.interceptors.response.eject(resInterceptor);
+    };
+  }, []);
+
+  const handleLoginSuccess = ({ token, role, username }) => {
+    setAuth({
+      token,
+      role,
+      username,
+      isAuthenticated: true,
+    });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('bms_token');
+    localStorage.removeItem('bms_role');
+    localStorage.removeItem('bms_username');
+    setAuth({
+      token: null,
+      role: '',
+      username: '',
+      isAuthenticated: false,
+    });
+  };
+
   const handleConfigUpdated = () => {
     console.log("Configuración actualizada, recargando estado del sistema...");
     setReloadKey((prev) => prev + 1);
   };
 
+  // Si no está autenticado, mostramos la pantalla de login
+  if (!auth.isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
       {/* Topbar */}
       <header className="bg-gray-950 border-b border-gray-800 p-4 shadow-md sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Activity className="text-blue-500 animate-pulse" size={28} />
             <div>
@@ -28,7 +96,20 @@ function AppContent() {
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* User Badge */}
+            <div className="flex items-center gap-2 px-3 py-1 bg-gray-900 border border-gray-800 rounded-lg text-xs font-mono">
+              <User size={13} className="text-blue-400" />
+              <span className="font-semibold text-gray-200">{auth.username}</span>
+              <span className={`px-1.5 py-0.2 rounded text-[10px] uppercase font-bold ${
+                auth.role === 'root' ? 'bg-red-950 text-red-400 border border-red-800' :
+                auth.role === 'admin' ? 'bg-purple-950 text-purple-400 border border-purple-800' :
+                'bg-blue-950 text-blue-400 border border-blue-800'
+              }`}>
+                {auth.role}
+              </span>
+            </div>
+
             {/* Language Selector */}
             <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1 text-xs font-mono">
               <Globe size={14} className="text-blue-400 ml-1.5 mr-0.5" />
@@ -59,6 +140,16 @@ function AppContent() {
               <Radio size={14} className="text-green-400" />
               <span>{t('fastApiStatus')}</span>
             </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1 bg-red-950 hover:bg-red-900/80 border border-red-800/80 text-red-300 rounded-lg text-xs font-mono transition-colors cursor-pointer"
+              title={t('logout')}
+            >
+              <LogOut size={13} />
+              <span>{t('logout')}</span>
+            </button>
           </div>
         </div>
       </header>

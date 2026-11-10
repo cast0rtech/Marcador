@@ -15,6 +15,7 @@ from models import AlarmEvent, DataPoint
 import models
 import schemas
 from pdf_exporter import generar_pdf_auditoria
+from auth import get_current_user
 
 router = APIRouter(tags=["DataPoints & Dashboard"])
 router_alarms = APIRouter(prefix="/api/alarms", tags=["Alarms"])
@@ -131,7 +132,11 @@ async def export_points(db: AsyncSession = Depends(get_db)):
 
 @router.post("/api/points/import", summary="Importar puntos desde CSV o Excel")
 @router.post("/upload-points", include_in_schema=False)
-async def import_points(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+async def import_points(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     """Importa puntos desde un archivo CSV o Excel y crea los grupos si no existen."""
     contents = await file.read()
     filename = (file.filename or "").lower()
